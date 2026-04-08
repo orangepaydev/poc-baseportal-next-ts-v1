@@ -6,18 +6,25 @@ This project includes a local MariaDB setup for development via Docker Compose.
 
 ## Files
 
+- `.env`
+  - Stores the app's default database connection settings for local development.
+
 - `docker-compose.yml`
   - Starts a MariaDB container on port `3306`.
+  - Uses fixed local-development MariaDB container settings.
   - Mounts initialization assets from `docker-init/mariadb/init`.
 
 - `docker-init/mariadb/init/001-create-portaldb.sql`
   - Runs on first database bootstrap.
-  - Creates the `portaldb` database.
-  - Creates the `dbuser` user with password `dbpass123`.
+  - Ensures the `portaldb` database exists with the expected character set and collation.
+  - Creates the `dbuser` user with password `dbpass123` and grants full access to `portaldb`.
 
 - `docker-init/mariadb/init/002-authz-approval-schema.sql`
   - Creates the application tables for organizations, users, user groups, permissions, approvals, locks, and audit events.
   - Seeds baseline permission metadata.
+
+- `docker-init/mariadb/init/003-owner.sql`
+  - Seeds the `owner` organization, initial users, user groups, memberships, and menu access grants.
 
 ## Usage
 
@@ -28,4 +35,5 @@ This project includes a local MariaDB setup for development via Docker Compose.
 ## Notes
 
 - MariaDB init scripts only run when the data volume is empty.
-- The container root password is defined in `docker-compose.yml` for local development.
+- The MariaDB container credentials are hardcoded in `docker-compose.yml` for local development.
+- The app's database connection settings are defined in the repository root `.env` file.

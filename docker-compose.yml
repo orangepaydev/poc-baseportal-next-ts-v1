@@ -5,13 +5,25 @@ services:
     restart: unless-stopped
     environment:
       MARIADB_ROOT_PASSWORD: rootpass123
+      MARIADB_DATABASE: portaldb
+      MARIADB_USER: dbuser
+      MARIADB_PASSWORD: dbpass123
     ports:
       - "3306:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./docker-init/mariadb/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD", "mariadb-admin", "ping", "-h", "127.0.0.1", "-uroot", "-prootpass123"]
+      test:
+        [
+          "CMD",
+          "mariadb-admin",
+          "ping",
+          "-h",
+          "127.0.0.1",
+          "-uroot",
+          "-prootpass123",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -25,6 +25,17 @@ A Next.js application built with TypeScript, Tailwind CSS, pnpm, and shadcn UI c
 pnpm install
 ```
 
+Create a local environment file before using the database layer:
+
+```bash
+cp .env.example .env.local
+```
+
+The example file documents the supported database types and connection variable patterns for:
+
+- `mariadb`
+- `postgresql`
+
 ### Development
 
 Run the development server:
@@ -36,6 +47,8 @@ pnpm dev
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Local Development Resources
+
+The local MariaDB container uses fixed local-development settings from `docker-compose.yml`. The app's database connection settings are still read from the repository root `.env` file.
 
 Start the local MariaDB container:
 
@@ -52,6 +65,88 @@ Shut down the local MariaDB container and remove the Compose-managed volume:
 ```
 
 These scripts wrap the project Docker Compose commands so local database startup and teardown stay consistent.
+
+## Database Configuration
+
+The project includes a generic server-side database library at `src/lib/db`.
+
+It supports:
+
+- MariaDB
+- PostgreSQL
+- A default connection
+- Optional named connections
+- Generic `?` placeholders across supported databases
+
+### Environment Variables
+
+Use `.env.example` as the source template for your local `.env.local` file.
+
+Connection names are declared with:
+
+```bash
+DB_CONNECTION_NAMES=default,reporting
+DB_DEFAULT_CONNECTION=default
+```
+
+Each connection then uses its own variable prefix:
+
+- `DB_DEFAULT_*`
+- `DB_REPORTING_*`
+
+Supported connection fields include:
+
+- `TYPE`
+- `HOST`
+- `PORT`
+- `DATABASE`
+- `USER`
+- `PASSWORD`
+- `SSL`
+- `URL`
+- `CONNECTION_LIMIT`
+- `IDLE_TIMEOUT_MS`
+- `CONNECTION_TIMEOUT_MS`
+
+Supported `TYPE` values are:
+
+- `mariadb`
+- `postgresql`
+
+If you only need one database, keep a single `default` connection. Multiple named connections are supported without much extra application complexity because the library resolves them through one shared API.
+
+### Query Usage
+
+Use the generic helpers from `@/lib/db` in server-side code:
+
+```ts
+import { db } from '@/lib/db';
+
+type UserRow = {
+  id: number;
+  username: string;
+};
+
+const users = await db.query<UserRow>(
+  'select id, username from users where organization_id = ? and status = ?',
+  [organizationId, 'ACTIVE']
+);
+
+const user = await db.queryOne<UserRow>(
+  'select id, username from users where id = ?',
+  [userId]
+);
+```
+
+`queryOne` returns `null` when there is no matching row and throws when more than one row is returned.
+
+To target a non-default connection:
+
+```ts
+await db.query('select now() as current_time', [], {
+  connectionName: 'reporting',
+});
+```
 
 ### Build
 

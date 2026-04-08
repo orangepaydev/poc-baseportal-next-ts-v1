@@ -17,8 +17,12 @@ This document describes where the application source code lives and what each cu
 
 Local Docker Compose entry point for infrastructure services.
 
+- `.env`
+  - Local environment values for the app's default database connection.
+
 - `docker-compose.yml`
   - Starts a local MariaDB instance for development.
+  - Uses fixed local-development MariaDB container settings.
   - Mounts database initialization scripts from `docker-init/mariadb/init`.
 
 - `dev-resource-start.sh`
@@ -33,12 +37,15 @@ Local Docker Compose entry point for infrastructure services.
 MariaDB bootstrap assets used by the Docker container on first startup.
 
 - `docker-init/mariadb/init/001-create-portaldb.sql`
-  - Creates the `portaldb` database.
-  - Creates and grants access to the `dbuser` development user.
+  - Ensures the local development database exists with the expected character set and collation.
+  - Creates the local development database user `dbuser` with password `dbpass123` and grants full access to `portaldb`.
 
 - `docker-init/mariadb/init/002-authz-approval-schema.sql`
   - Creates the MariaDB schema for tenant-aware login, group permissions, approval workflow, and audit trail.
   - Seeds baseline permission metadata for the current workspace navigation and admin resources.
+
+- `docker-init/mariadb/init/003-owner.sql`
+  - Seeds the initial `owner` tenant, users, user groups, memberships, and menu permission assignments.
 
 ## Source Tree
 
@@ -91,6 +98,31 @@ Shared non-visual utilities and application metadata.
 - `src/lib/utils.ts`
   - Shared utility helpers.
   - Currently provides the `cn` class name merge helper.
+
+### `src/lib/db/`
+
+Server-side database access library.
+
+- `src/lib/db/index.ts`
+  - Public database entry point.
+  - Exposes generic `query`, `queryOne`, and `execute` helpers.
+  - Supports a default connection plus optional named connections.
+
+- `src/lib/db/config.ts`
+  - Reads and validates database configuration from environment variables.
+  - Supports `mariadb` and `postgresql` connection types.
+
+- `src/lib/db/types.ts`
+  - Shared database types for connections, queries, and execution results.
+
+- `src/lib/db/placeholders.ts`
+  - Converts the library's generic `?` placeholder syntax into PostgreSQL positional placeholders.
+
+- `src/lib/db/adapters/mariadb.ts`
+  - MariaDB adapter implementation backed by the `mariadb` package.
+
+- `src/lib/db/adapters/postgresql.ts`
+  - PostgreSQL adapter implementation backed by the `pg` package.
 
 ## How To Maintain This File
 
