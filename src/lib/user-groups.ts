@@ -104,6 +104,13 @@ export type ManagedUserGroup = {
   updatedAt: string;
 };
 
+export type PaginatedUserGroupSearchResult = {
+  rows: ManagedUserGroup[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+};
+
 export type PendingUserGroupRequest = {
   id: number;
   resourceKey: string;
@@ -800,6 +807,68 @@ async function completeReview(input: {
 
 export async function listApprovedUserGroups(organizationId: number) {
   return searchApprovedUserGroups(organizationId);
+}
+
+export async function searchApprovedUserGroupsPage(input: {
+  organizationId: number;
+  groupNameQuery?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<PaginatedUserGroupSearchResult> {
+  const normalizedQuery = (input.groupNameQuery ?? '').trim();
+  const likeQuery = `%${normalizedQuery}%`;
+  const pageSize = Math.max(1, Math.min(input.pageSize ?? 10, 100));
+  const page = Math.max(1, input.page ?? 1);
+  const offset = (page - 1) * pageSize;
+
+  const totalRow = await db.queryOne<{ total_count: number | string }>(
+    `
+      select
+        count(*) as total_count
+      from user_groups user_group
+      where user_group.organization_id = ?
+        and (? = '%%' or user_group.group_name like ?)
+    `,
+    [input.organizationId, likeQuery, likeQuery]
+  );
+
+  const rows = await db.query<UserGroupListRow>(
+    `
+      select
+        user_group.id,
+        user_group.group_code,
+        user_group.group_name,
+        user_group.description,
+        user_group.status,
+        count(distinct membership.user_id) as member_count,
+        count(distinct group_permission.permission_id) as permission_count,
+        user_group.updated_at
+      from user_groups user_group
+      left join user_group_memberships membership
+        on membership.user_group_id = user_group.id
+      left join user_group_permissions group_permission
+        on group_permission.user_group_id = user_group.id
+      where user_group.organization_id = ?
+        and (? = '%%' or user_group.group_name like ?)
+      group by
+        user_group.id,
+        user_group.group_code,
+        user_group.group_name,
+        user_group.description,
+        user_group.status,
+        user_group.updated_at
+      order by user_group.group_name asc
+      limit ? offset ?
+    `,
+    [input.organizationId, likeQuery, likeQuery, pageSize, offset]
+  );
+
+  return {
+    rows: rows.map(mapManagedUserGroup),
+    totalCount: toNumber(totalRow?.total_count),
+    page,
+    pageSize,
+  };
 }
 
 export async function searchApprovedUserGroups(

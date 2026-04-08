@@ -76,17 +76,9 @@ export default async function UserGroupDetailPage({
             <p className="text-xs font-semibold tracking-[0.22em] text-cyan-700 uppercase">
               User Group Detail
             </p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-              {group.groupName}
-            </h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
-              Review the current approved record for this user group. Top-level
-              actions change depending on whether the record already has a
-              pending approval request.
-            </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex w-full flex-wrap items-center gap-3 md:w-auto">
             <Button variant="outline" className="rounded-2xl" asChild>
               <Link href="/admin/user-group">
                 <ArrowLeft className="size-4" />

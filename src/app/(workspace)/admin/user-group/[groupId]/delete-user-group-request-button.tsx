@@ -58,14 +58,14 @@ export function DeleteUserGroupRequestButton({
                 className="rounded-2xl"
                 onClick={() => setOpen(false)}
               >
-                Cancel
+                Exit
               </Button>
               <Button
                 type="submit"
                 variant="destructive"
                 className="rounded-2xl"
               >
-                Confirm delete
+                Delete
               </Button>
             </form>
           </div>

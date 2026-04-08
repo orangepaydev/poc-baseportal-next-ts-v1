@@ -6,31 +6,60 @@ import { requireNavigationItemAccess } from '@/lib/auth/authorization';
 import {
   buildUserGroupRouteResourceKey,
   listPendingUserGroupRequests,
-  searchApprovedUserGroups,
+  searchApprovedUserGroupsPage,
 } from '@/lib/user-groups';
 
 type UserGroupPageProps = {
   searchParams: Promise<{
     q?: string;
+    page?: string;
     notice?: string;
     error?: string;
   }>;
 };
+
+const PAGE_SIZE = 10;
+
+function buildPageHref(searchQuery: string, page: number) {
+  const params = new URLSearchParams();
+
+  if (searchQuery) {
+    params.set('q', searchQuery);
+  }
+
+  if (page > 1) {
+    params.set('page', String(page));
+  }
+
+  const query = params.toString();
+
+  return query ? `/admin/user-group?${query}` : '/admin/user-group';
+}
 
 export default async function UserGroupPage({
   searchParams,
 }: UserGroupPageProps) {
   const params = await searchParams;
   const searchQuery = (params.q ?? '').trim();
+  const currentPage = Math.max(1, Number.parseInt(params.page ?? '1', 10) || 1);
   const { permissionCodes, session } = await requireNavigationItemAccess(
     'admin',
     'user-group'
   );
   const canManage = permissionCodes.includes('USER_GROUP_WRITE');
-  const [groups, pendingRequests] = await Promise.all([
-    searchApprovedUserGroups(session.organizationId, searchQuery),
+  const [groupSearchResult, pendingRequests] = await Promise.all([
+    searchApprovedUserGroupsPage({
+      organizationId: session.organizationId,
+      groupNameQuery: searchQuery,
+      page: currentPage,
+      pageSize: PAGE_SIZE,
+    }),
     listPendingUserGroupRequests(session.organizationId),
   ]);
+  const { rows: groups, totalCount, page, pageSize } = groupSearchResult;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const resultStart = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
+  const resultEnd = Math.min(page * pageSize, totalCount);
   const pendingRequestByResourceKey = new Map(
     pendingRequests.map((request) => [request.resourceKey, request])
   );
@@ -40,22 +69,9 @@ export default async function UserGroupPage({
       <section className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold tracking-[0.22em] text-cyan-700 uppercase">
-              Query Panel
-            </p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+            <h2 className="text-[1.05rem] font-semibold tracking-tight text-slate-950">
               User Group search
             </h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
-              Search user groups in {session.organizationCode} by wildcard name
-              match. The query result panel below shows the internal ID, group
-              name, and whether a pending approval request already exists for
-              each record.
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-cyan-50 px-4 py-3 text-sm text-cyan-800">
-            {groups.length} result{groups.length === 1 ? '' : 's'}
           </div>
         </div>
 
@@ -122,19 +138,11 @@ export default async function UserGroupPage({
         ) : null}
       </section>
 
-      <section className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold tracking-[0.22em] text-slate-500 uppercase">
-              Query Result Panel
-            </p>
-            <h3 className="mt-2 text-2xl font-semibold text-slate-950">
-              User Group results
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Click the internal ID to open the detail page for a user group.
-            </p>
-          </div>
+      <section className="rounded-[24px] border border-slate-200 bg-white p-1 shadow-sm">
+        <div className="flex flex-wrap items-center justify-end gap-3 px-5 pt-5 text-sm text-slate-600">
+          <p>
+            Page {page} of {totalPages}
+          </p>
         </div>
 
         <div className="mt-6 overflow-hidden rounded-[24px] border border-slate-200">
@@ -214,6 +222,28 @@ export default async function UserGroupPage({
               </tbody>
             </table>
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-end gap-2 px-5 py-5">
+          {page > 1 ? (
+            <Button variant="outline" className="rounded-2xl" asChild>
+              <Link href={buildPageHref(searchQuery, page - 1)}>Previous</Link>
+            </Button>
+          ) : (
+            <Button variant="outline" className="rounded-2xl" disabled>
+              Previous
+            </Button>
+          )}
+
+          {page < totalPages ? (
+            <Button variant="outline" className="rounded-2xl" asChild>
+              <Link href={buildPageHref(searchQuery, page + 1)}>Next</Link>
+            </Button>
+          ) : (
+            <Button variant="outline" className="rounded-2xl" disabled>
+              Next
+            </Button>
+          )}
         </div>
       </section>
     </div>
