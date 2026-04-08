@@ -158,8 +158,12 @@ export default async function UserGroupDetailPage({
               </td>
               <td className="py-3 font-semibold text-slate-950">
                 {pendingRequest
-                  ? 'Pending request exists'
-                  : 'No pending request'}
+                  ? pendingRequest.actionType === 'CREATE'
+                    ? 'Pending create approval'
+                    : pendingRequest.actionType === 'UPDATE'
+                      ? 'Pending edit approval'
+                      : 'Pending delete approval'
+                  : 'No approval'}
               </td>
             </tr>
             <tr className="border-b border-slate-200">

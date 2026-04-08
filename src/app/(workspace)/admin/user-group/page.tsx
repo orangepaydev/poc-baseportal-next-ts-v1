@@ -159,13 +159,16 @@ export default async function UserGroupPage({
                   <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
                     Status
                   </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
+                    Approval Request
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white">
                 {groups.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={3}
+                      colSpan={4}
                       className="px-4 py-8 text-center text-sm text-slate-500"
                     >
                       No user groups matched the current query.
@@ -206,13 +209,22 @@ export default async function UserGroupPage({
                         </div>
                       </td>
                       <td className="px-4 py-4">
+                        <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                          {group.status}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
                         {pendingRequest ? (
                           <div className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                            Pending request
+                            {pendingRequest.actionType === 'CREATE'
+                              ? 'Pending create approval'
+                              : pendingRequest.actionType === 'UPDATE'
+                                ? 'Pending edit approval'
+                                : 'Pending delete approval'}
                           </div>
                         ) : (
                           <div className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                            No pending request
+                            No approval
                           </div>
                         )}
                       </td>

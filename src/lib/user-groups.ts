@@ -114,6 +114,7 @@ export type PaginatedUserGroupSearchResult = {
 export type PendingUserGroupRequest = {
   id: number;
   resourceKey: string;
+  actionType: UserGroupRequestAction;
   summary: string;
   submittedByUserId: number | null;
   submittedByDisplayName: string | null;
@@ -259,6 +260,7 @@ function mapPendingUserGroupRequest(
   return {
     id: toNumber(row.id),
     resourceKey: row.resource_key,
+    actionType: row.action_type,
     summary: row.summary,
     submittedByUserId:
       row.submitted_by_user_id === null
@@ -634,32 +636,21 @@ function ensureActionMatchesPatch(
 async function applyApprovedChange(patch: UserGroupChangePatch) {
   switch (patch.op) {
     case 'CREATE_USER_GROUP': {
-      const existingGroup = await findExistingGroupByCode(
-        patch.values.organization_id,
-        patch.values.group_code
-      );
-
-      if (existingGroup) {
-        throw new Error('A user group with this code already exists.');
-      }
-
       await db.execute(
         `
-          insert into user_groups (
-            organization_id,
-            group_code,
-            group_name,
-            description,
-            status
-          )
-          values (?, ?, ?, ?, ?)
+          update user_groups
+          set group_name = ?,
+              description = ?,
+              status = 'ACTIVE'
+          where organization_id = ?
+            and group_code = ?
+            and status = 'INACTIVE'
         `,
         [
-          patch.values.organization_id,
-          patch.values.group_code,
           patch.values.group_name,
           patch.values.description,
-          patch.values.status,
+          patch.values.organization_id,
+          patch.values.group_code,
         ]
       );
       return;
@@ -1052,6 +1043,25 @@ export async function submitCreateUserGroupRequest(input: {
       status,
     }),
   });
+
+  await db.execute(
+    `
+      insert into user_groups (
+        organization_id,
+        group_code,
+        group_name,
+        description,
+        status
+      )
+      values (?, ?, ?, ?, 'INACTIVE')
+    `,
+    [
+      context.session.organizationId,
+      groupCode,
+      groupName,
+      description,
+    ]
+  );
 }
 
 export async function submitUpdateUserGroupRequest(input: {
@@ -1287,4 +1297,18 @@ export async function rejectUserGroupRequest(input: {
     comment: normalizeDescription(input.comment),
     summary: request.summary,
   });
+
+  const patch = parseChangePatch(request.change_patch);
+
+  if (patch.op === 'CREATE_USER_GROUP') {
+    await db.execute(
+      `
+        delete from user_groups
+        where organization_id = ?
+          and group_code = ?
+          and status = 'INACTIVE'
+      `,
+      [patch.values.organization_id, patch.values.group_code]
+    );
+  }
 }
