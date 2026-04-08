@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { db } from '@/lib/db';
+import { getAuthenticatedUserContext } from '@/lib/auth/authorization';
 
 type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 type ActionType = 'CREATE' | 'UPDATE' | 'DELETE' | 'ADD' | 'REMOVE';
@@ -268,4 +269,321 @@ export async function getApprovalRequestById(
         : toNumber(row.reviewed_by_user_id),
     actions: actionRows.map(mapActionItem),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Approve / Reject
+// ---------------------------------------------------------------------------
+
+type ChangePatchPayload = Record<string, unknown>;
+
+function requirePendingRequest(row: ApprovalRequestDetailRow | null) {
+  if (!row || row.status !== 'PENDING') {
+    throw new Error('Only pending requests can be approved or rejected.');
+  }
+
+  return row;
+}
+
+function normalizeComment(comment: string) {
+  const normalized = comment.trim();
+
+  return normalized || null;
+}
+
+async function completeReview(input: {
+  requestId: number;
+  status: 'APPROVED' | 'REJECTED';
+  actorUserId: number;
+  organizationId: number;
+  resourceType: string;
+  resourceKey: string;
+  comment: string | null;
+  summary: string;
+}) {
+  await db.execute(
+    `
+      update approval_requests
+      set status = ?,
+          reviewed_by_user_id = ?,
+          reviewed_at = current_timestamp,
+          review_comment = ?
+      where id = ?
+        and status = 'PENDING'
+    `,
+    [input.status, input.actorUserId, input.comment, input.requestId]
+  );
+
+  await db.execute(
+    `
+      insert into approval_request_actions (
+        approval_request_id,
+        action_type,
+        acted_by_user_id,
+        comment_text,
+        state_snapshot
+      )
+      values (?, ?, ?, ?, ?)
+    `,
+    [
+      input.requestId,
+      input.status,
+      input.actorUserId,
+      input.comment,
+      JSON.stringify({
+        resource_key: input.resourceKey,
+        summary: input.summary,
+      }),
+    ]
+  );
+
+  await db.execute(
+    `
+      delete from approval_locks
+      where approval_request_id = ?
+    `,
+    [input.requestId]
+  );
+
+  await db.execute(
+    `
+      insert into audit_events (
+        organization_id,
+        actor_user_id,
+        event_type,
+        resource_type,
+        resource_key,
+        approval_request_id,
+        event_data
+      )
+      values (?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      input.organizationId,
+      input.actorUserId,
+      `${input.resourceType}_CHANGE_${input.status}`,
+      input.resourceType,
+      input.resourceKey,
+      input.requestId,
+      JSON.stringify({ comment: input.comment, summary: input.summary }),
+    ]
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Resource-type specific change-patch handlers
+// ---------------------------------------------------------------------------
+
+async function applyApprovedUserGroupPatch(patch: ChangePatchPayload) {
+  switch (patch.op) {
+    case 'CREATE_USER_GROUP': {
+      const values = patch.values as {
+        organization_id: number;
+        group_code: string;
+        group_name: string;
+        description: string | null;
+      };
+
+      await db.execute(
+        `
+          update user_groups
+          set group_name = ?,
+              description = ?,
+              status = 'ACTIVE'
+          where organization_id = ?
+            and group_code = ?
+            and status = 'INACTIVE'
+        `,
+        [values.group_name, values.description, values.organization_id, values.group_code]
+      );
+      return;
+    }
+    case 'UPDATE_USER_GROUP': {
+      const target = patch.target as { id: number; organization_id: number };
+      const values = patch.values as {
+        group_name: string;
+        description: string | null;
+        status: string;
+      };
+
+      await db.execute(
+        `
+          update user_groups
+          set group_name = ?,
+              description = ?,
+              status = ?
+          where id = ?
+            and organization_id = ?
+        `,
+        [values.group_name, values.description, values.status, target.id, target.organization_id]
+      );
+      return;
+    }
+    case 'DELETE_USER_GROUP': {
+      const target = patch.target as { id: number; organization_id: number };
+
+      await db.execute(
+        `
+          delete from user_groups
+          where id = ?
+            and organization_id = ?
+        `,
+        [target.id, target.organization_id]
+      );
+      return;
+    }
+    default:
+      throw new Error(`Unsupported user group patch operation: ${String(patch.op)}`);
+  }
+}
+
+async function revertRejectedCreate(
+  resourceType: string,
+  patch: ChangePatchPayload
+) {
+  if (resourceType === 'USER_GROUP' && patch.op === 'CREATE_USER_GROUP') {
+    const values = patch.values as {
+      organization_id: number;
+      group_code: string;
+    };
+
+    await db.execute(
+      `
+        delete from user_groups
+        where organization_id = ?
+          and group_code = ?
+          and status = 'INACTIVE'
+      `,
+      [values.organization_id, values.group_code]
+    );
+  }
+}
+
+async function applyApprovedPatch(
+  resourceType: string,
+  patch: ChangePatchPayload
+) {
+  switch (resourceType) {
+    case 'USER_GROUP':
+      return applyApprovedUserGroupPatch(patch);
+    default:
+      throw new Error(`Unsupported resource type for approval: ${resourceType}`);
+  }
+}
+
+async function loadPendingRequest(requestId: number, organizationId: number) {
+  return db.queryOne<ApprovalRequestDetailRow>(
+    `
+      select
+        ar.id,
+        ar.resource_type,
+        ar.resource_key,
+        ar.action_type,
+        ar.status,
+        ar.summary,
+        ar.before_state,
+        ar.after_state,
+        ar.changed_fields,
+        ar.change_patch,
+        ar.review_comment,
+        ar.submitted_by_user_id,
+        submitter.display_name as submitted_by_display_name,
+        ar.submitted_at,
+        ar.reviewed_by_user_id,
+        reviewer.display_name as reviewed_by_display_name,
+        ar.reviewed_at
+      from approval_requests ar
+      left join users submitter
+        on submitter.id = ar.submitted_by_user_id
+      left join users reviewer
+        on reviewer.id = ar.reviewed_by_user_id
+      where ar.id = ?
+        and ar.organization_id = ?
+    `,
+    [requestId, organizationId]
+  );
+}
+
+export async function approveRequest(input: {
+  requestId: number;
+  comment: string;
+}) {
+  const context = await getAuthenticatedUserContext();
+
+  if (
+    context.session.userType !== 'ADMIN' &&
+    !context.permissionCodes.includes('APPROVAL_REQUEST_APPROVE')
+  ) {
+    throw new Error('You do not have permission to approve requests.');
+  }
+
+  const row = requirePendingRequest(
+    await loadPendingRequest(input.requestId, context.session.organizationId)
+  );
+
+  if (toNumber(row.submitted_by_user_id) === context.session.userId) {
+    throw new Error('You cannot approve a request you submitted.');
+  }
+
+  const patch = parseJsonColumn<ChangePatchPayload>(row.change_patch);
+
+  if (!patch) {
+    throw new Error('The stored approval request payload is invalid.');
+  }
+
+  await applyApprovedPatch(row.resource_type, patch);
+
+  await completeReview({
+    requestId: toNumber(row.id),
+    status: 'APPROVED',
+    actorUserId: context.session.userId,
+    organizationId: context.session.organizationId,
+    resourceType: row.resource_type,
+    resourceKey: row.resource_key,
+    comment: normalizeComment(input.comment),
+    summary: row.summary,
+  });
+}
+
+export async function rejectRequest(input: {
+  requestId: number;
+  comment: string;
+}) {
+  const context = await getAuthenticatedUserContext();
+
+  if (
+    context.session.userType !== 'ADMIN' &&
+    !context.permissionCodes.includes('APPROVAL_REQUEST_APPROVE')
+  ) {
+    throw new Error('You do not have permission to reject requests.');
+  }
+
+  const row = requirePendingRequest(
+    await loadPendingRequest(input.requestId, context.session.organizationId)
+  );
+
+  if (toNumber(row.submitted_by_user_id) === context.session.userId) {
+    throw new Error('You cannot reject a request you submitted.');
+  }
+
+  const patch = parseJsonColumn<ChangePatchPayload>(row.change_patch);
+
+  await completeReview({
+    requestId: toNumber(row.id),
+    status: 'REJECTED',
+    actorUserId: context.session.userId,
+    organizationId: context.session.organizationId,
+    resourceType: row.resource_type,
+    resourceKey: row.resource_key,
+    comment: normalizeComment(input.comment),
+    summary: row.summary,
+  });
+
+  // For CREATE requests, the record was already inserted as INACTIVE — clean it up.
+  if (
+    patch &&
+    (row.action_type === 'CREATE' || row.action_type === 'ADD')
+  ) {
+    await revertRejectedCreate(row.resource_type, patch);
+  }
 }

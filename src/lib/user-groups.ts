@@ -313,7 +313,10 @@ function buildChangedFields(
 async function requirePermission(permissionCode: string) {
   const context = await getAuthenticatedUserContext();
 
-  if (!context.permissionCodes.includes(permissionCode)) {
+  if (
+    context.session.userType !== 'ADMIN' &&
+    !context.permissionCodes.includes(permissionCode)
+  ) {
     throw new Error('You do not have permission to perform this action.');
   }
 

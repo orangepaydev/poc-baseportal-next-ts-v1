@@ -82,42 +82,59 @@ function buildVisibleNavigationGroups(permissionCodes: string[]) {
 const loadAuthenticatedUserContext = cache(
   async (): Promise<AuthenticatedUserContext> => {
     const session = await requireSession();
+    const isAdmin = session.userType === 'ADMIN';
 
     const permissionRows = await db.query<PermissionGrantRow>(
-      `
-        select distinct
-          permission.permission_code,
-          permission.permission_name,
-          permission.action_code,
-          resource_type.resource_code,
-          permission.resource_instance_key
-        from users user
-        inner join user_group_memberships membership
-          on membership.user_id = user.id
-        inner join user_groups user_group
-          on user_group.id = membership.user_group_id
-        inner join user_group_permissions group_permission
-          on group_permission.user_group_id = user_group.id
-        inner join permissions permission
-          on permission.id = group_permission.permission_id
-        inner join permission_resource_types resource_type
-          on resource_type.id = permission.resource_type_id
-        where user.id = ?
-          and user.organization_id = ?
-          and user.status = 'ACTIVE'
-          and user_group.organization_id = ?
-          and user_group.status = 'ACTIVE'
-        order by permission.permission_code
-      `,
-      [session.userId, session.organizationId, session.organizationId]
+      isAdmin
+        ? `
+            select distinct
+              permission.permission_code,
+              permission.permission_name,
+              permission.action_code,
+              resource_type.resource_code,
+              permission.resource_instance_key
+            from permissions permission
+            inner join permission_resource_types resource_type
+              on resource_type.id = permission.resource_type_id
+            order by permission.permission_code
+          `
+        : `
+            select distinct
+              permission.permission_code,
+              permission.permission_name,
+              permission.action_code,
+              resource_type.resource_code,
+              permission.resource_instance_key
+            from users user
+            inner join user_group_memberships membership
+              on membership.user_id = user.id
+            inner join user_groups user_group
+              on user_group.id = membership.user_group_id
+            inner join user_group_permissions group_permission
+              on group_permission.user_group_id = user_group.id
+            inner join permissions permission
+              on permission.id = group_permission.permission_id
+            inner join permission_resource_types resource_type
+              on resource_type.id = permission.resource_type_id
+            where user.id = ?
+              and user.organization_id = ?
+              and user.status = 'ACTIVE'
+              and user_group.organization_id = ?
+              and user_group.status = 'ACTIVE'
+            order by permission.permission_code
+          `,
+      isAdmin
+        ? []
+        : [session.userId, session.organizationId, session.organizationId]
     );
 
     const permissions = permissionRows.map(mapPermissionRow);
     const permissionCodes = permissions.map(
       (permission) => permission.permissionCode
     );
-    const visibleNavigationGroups =
-      buildVisibleNavigationGroups(permissionCodes);
+    const visibleNavigationGroups = isAdmin
+      ? navigationGroups
+      : buildVisibleNavigationGroups(permissionCodes);
 
     return {
       session,
@@ -146,8 +163,13 @@ export async function requireNavigationItemAccess(
   const context = await getAuthenticatedUserContext();
   const entry = findNavigationItem(groupSlug, itemSlug);
 
+  if (!entry) {
+    notFound();
+  }
+
+  // Admin users bypass permission checks entirely.
   if (
-    !entry ||
+    context.session.userType !== 'ADMIN' &&
     !hasNavigationAccess(context.permissionCodes, groupSlug, itemSlug)
   ) {
     notFound();

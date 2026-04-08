@@ -62,6 +62,11 @@ function decodeSession(cookieValue: string) {
       return null;
     }
 
+    // Default for sessions created before user_type was added.
+    if (!decoded.userType) {
+      decoded.userType = 'NORMAL';
+    }
+
     return decoded as AuthenticatedSession;
   } catch {
     return null;

@@ -7,6 +7,8 @@ import { requireNavigationItemAccess } from '@/lib/auth/authorization';
 import { getApprovalRequestById } from '@/lib/approval-requests';
 import { interpretChange } from '@/lib/change-interpreters';
 
+import { ApprovalRequestActionButtons } from './approval-request-action-buttons';
+
 type ApprovalRequestDetailPageProps = {
   params: Promise<{
     requestId: string;
@@ -42,7 +44,7 @@ export default async function ApprovalRequestDetailPage({
     searchParams,
   ]);
 
-  const { session } = await requireNavigationItemAccess(
+  const { session, permissionCodes } = await requireNavigationItemAccess(
     'admin',
     'approval-request'
   );
@@ -65,6 +67,10 @@ export default async function ApprovalRequestDetailPage({
     request.afterState
   );
 
+  const canApprove =
+    request.status === 'PENDING' &&
+    permissionCodes.includes('APPROVAL_REQUEST_APPROVE');
+
   return (
     <div className="grid gap-4">
       <section className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
@@ -82,6 +88,10 @@ export default async function ApprovalRequestDetailPage({
                 Back
               </Link>
             </Button>
+
+            {canApprove ? (
+              <ApprovalRequestActionButtons requestId={request.id} />
+            ) : null}
           </div>
         </div>
 

@@ -1,3 +1,5 @@
+export type UserType = 'ADMIN' | 'NORMAL';
+
 export type AuthenticatedSession = {
   sessionId: string;
   userId: number;
@@ -5,6 +7,7 @@ export type AuthenticatedSession = {
   organizationCode: string;
   username: string;
   displayName: string;
+  userType: UserType;
   issuedAt: string;
 };
 

@@ -17,6 +17,7 @@ INSERT IGNORE INTO users (
   email,
   password_sha256,
   password_algo,
+  user_type,
   status
 )
 SELECT
@@ -26,12 +27,13 @@ SELECT
   seed.email,
   SHA2(seed.password_plaintext, 256),
   'SHA256',
+  seed.user_type,
   'ACTIVE'
 FROM (
-  SELECT 'root1' AS username, 'Root 1' AS display_name, 'root1@example.com' AS email, 'root1password' AS password_plaintext
-  UNION ALL SELECT 'root2', 'Root 2', 'root2@example.com', 'root2password'
-  UNION ALL SELECT 'user1', 'User 1', 'user1@example.com', 'user1password'
-  UNION ALL SELECT 'user2', 'User 2', 'user2@example.com', 'user2password'
+  SELECT 'root1' AS username, 'Root 1' AS display_name, 'root1@example.com' AS email, 'root1password' AS password_plaintext, 'ADMIN' AS user_type
+  UNION ALL SELECT 'root2', 'Root 2', 'root2@example.com', 'root2password', 'ADMIN'
+  UNION ALL SELECT 'user1', 'User 1', 'user1@example.com', 'user1password', 'NORMAL'
+  UNION ALL SELECT 'user2', 'User 2', 'user2@example.com', 'user2password', 'NORMAL'
 ) AS seed
 INNER JOIN organizations organization
   ON organization.organization_code = 'owner';

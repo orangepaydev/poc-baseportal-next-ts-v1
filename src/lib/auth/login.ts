@@ -22,6 +22,7 @@ type UserLoginRow = {
   display_name: string;
   password_sha256: string;
   password_algo: string;
+  user_type: 'ADMIN' | 'NORMAL';
 };
 
 function buildFailureResult(
@@ -106,7 +107,8 @@ export async function authenticateUser({
         user.username,
         user.display_name,
         user.password_sha256,
-        user.password_algo
+        user.password_algo,
+        user.user_type
       from users user
       where user.organization_id = ?
         and user.username = ?
@@ -170,6 +172,7 @@ export async function authenticateUser({
     organizationCode: organization.organization_code,
     username: user.username,
     displayName: user.display_name,
+    userType: user.user_type,
     issuedAt: new Date().toISOString(),
   };
 
