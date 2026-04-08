@@ -87,9 +87,6 @@ App Router entry points, route files, and global styling.
   - User group edit page.
   - Allows editing the user group name only for the current version of the workflow.
 
-- `src/app/(workspace)/admin/user-group/[groupId]/approve-request/page.tsx`
-  - Placeholder route for the future approval-request experience.
-
 - `src/app/(workspace)/admin/user-group/[groupId]/delete-user-group-request-button.tsx`
   - Route-local client component for the delete confirmation modal.
   - Submits a delete maker request from the detail page.
