@@ -1,4 +1,4 @@
-# poc-baseportal-node-ts-v1
+# poc-baseportal-next-ts-v1
 
 A Next.js application built with TypeScript, Tailwind CSS, pnpm, and shadcn UI components.
 
@@ -60,7 +60,7 @@ The build command will:
 ## Project Structure
 
 ```
-poc-baseportal-node-ts-v1/
+poc-baseportal-next-ts-v1/
 ├── src/
 │   ├── app/              # Next.js app directory
 │   │   ├── globals.css   # Global styles
