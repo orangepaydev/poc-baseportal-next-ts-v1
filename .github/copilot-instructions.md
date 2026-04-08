@@ -23,7 +23,7 @@ For every task in this project:
 
 Current documented navigation groups:
 
-- `Transactin`: `Overview`, `Invoices`, `Payments`
+- `Transaction`: `Overview`, `Invoices`, `Payments`
 - `Admin`: `Users`, `Roles`, `Audit Log`
 
 Documentation expectations:

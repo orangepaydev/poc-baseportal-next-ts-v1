@@ -20,9 +20,9 @@ See `doc/source-code.md` for the current source file map and where each part of 
 - Left menu panel
   - Collapsible.
   - Expanded state shows folder names and nested menu items.
-  - Collapsed state keeps the panel narrow and icon-first.
+  - Collapsed state fully hides the panel.
   - Current folders:
-    - `Transactin`
+    - `Transaction`
     - `Admin`
 
 - Right main panel
@@ -34,7 +34,7 @@ See `doc/source-code.md` for the current source file map and where each part of 
 
 The navigation is driven by centralized data in `src/lib/navigation.ts`.
 
-- `Transactin`
+- `Transaction`
   - `Overview`
   - `Invoices`
   - `Payments`
@@ -53,6 +53,6 @@ The navigation is driven by centralized data in `src/lib/navigation.ts`.
 - Menu items are real links and route to placeholder pages under `src/app/[group]/[item]/page.tsx`.
 - Navigation metadata is defined in `src/lib/navigation.ts` and reused by the shell and routed pages.
 - The shell is responsive:
-  - On larger screens the left panel shrinks when collapsed.
+  - On larger screens the left panel fully hides when collapsed.
   - On smaller screens the panel is hidden when collapsed and shown as an overlay when opened.
 - If future LLM tasks need to extend navigation, keep folder data centralized and reuse it for both the sidebar and page entry cards.

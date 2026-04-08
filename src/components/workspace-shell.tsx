@@ -98,11 +98,12 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
 
           <aside
             className={cn(
-              'relative z-20 border-r border-slate-200/80 bg-slate-950 text-slate-50 transition-all duration-300 ease-out',
+              'relative z-20 overflow-hidden bg-slate-950 text-slate-50 transition-all duration-300 ease-out',
               menuOpen
-                ? 'absolute inset-y-0 left-0 w-72 translate-x-0 px-4 py-5 sm:static sm:w-72 sm:px-5'
-                : 'w-0 -translate-x-full overflow-hidden px-0 py-5 sm:static sm:w-24 sm:translate-x-0 sm:px-3'
+                ? 'absolute inset-y-0 left-0 w-72 translate-x-0 border-r border-slate-200/80 px-4 py-5 opacity-100 sm:static sm:w-72 sm:px-5'
+                : 'pointer-events-none w-0 -translate-x-full border-r-0 px-0 py-0 opacity-0 sm:static sm:translate-x-0'
             )}
+            aria-hidden={!menuOpen}
           >
             <div className="flex h-full flex-col gap-6 overflow-hidden">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">

@@ -14,8 +14,8 @@ export type NavigationGroup = {
 
 export const navigationGroups: NavigationGroup[] = [
   {
-    title: 'Transactin',
-    slug: 'transactin',
+    title: 'Transaction',
+    slug: 'transaction',
     description:
       'Operational views for billing, payment flow, and workspace summaries.',
     items: [
@@ -24,21 +24,21 @@ export const navigationGroups: NavigationGroup[] = [
         slug: 'overview',
         description:
           'High-level transaction metrics, trends, and status indicators.',
-        href: '/transactin/overview',
+        href: '/transaction/overview',
       },
       {
         title: 'Invoices',
         slug: 'invoices',
         description:
           'Placeholder view for invoice queues, aging, and approval tasks.',
-        href: '/transactin/invoices',
+        href: '/transaction/invoices',
       },
       {
         title: 'Payments',
         slug: 'payments',
         description:
           'Placeholder view for payment monitoring, reconciliation, and issues.',
-        href: '/transactin/payments',
+        href: '/transaction/payments',
       },
     ],
   },
