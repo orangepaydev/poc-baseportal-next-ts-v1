@@ -244,6 +244,7 @@ FROM (
   UNION ALL SELECT 'GROUP_MEMBERSHIP_WRITE', 'GROUP_MEMBERSHIP', 'WRITE', '*', 'Maintain Group Memberships', 'Allows requesting user-to-group assignments.'
   UNION ALL SELECT 'GROUP_MEMBERSHIP_APPROVE', 'GROUP_MEMBERSHIP', 'APPROVE', '*', 'Approve Group Membership Changes', 'Allows approving user-to-group assignments.'
   UNION ALL SELECT 'AUDIT_LOG_READ', 'AUDIT_LOG', 'READ', '*', 'Read Audit Log', 'Allows viewing audit log entries.'
+  UNION ALL SELECT 'MENU_ADMIN_APPROVAL_REQUEST', 'MENU_ITEM', 'MENU', 'admin/approval-request', 'Access Admin Approval Request', 'Shows the Admin Approval Request menu item.'
   UNION ALL SELECT 'APPROVAL_REQUEST_READ', 'APPROVAL_REQUEST', 'READ', '*', 'Read Approval Requests', 'Allows viewing pending and historical approval requests.'
   UNION ALL SELECT 'APPROVAL_REQUEST_APPROVE', 'APPROVAL_REQUEST', 'APPROVE', '*', 'Approve Pending Changes', 'Allows approving or rejecting pending changes.'
 ) AS seed

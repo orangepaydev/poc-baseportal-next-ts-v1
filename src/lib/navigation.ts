@@ -97,6 +97,17 @@ export const navigationGroups: NavigationGroup[] = [
         },
       },
       {
+        title: 'Approval Request',
+        slug: 'approval-request',
+        description:
+          'Review pending and historical approval requests across all resource types.',
+        href: '/admin/approval-request',
+        access: {
+          menuPermissionCode: 'MENU_ADMIN_APPROVAL_REQUEST',
+          requiredPermissionCodes: ['APPROVAL_REQUEST_READ'],
+        },
+      },
+      {
         title: 'Audit Log',
         slug: 'audit-log',
         description:

@@ -99,6 +99,14 @@ App Router entry points, route files, and global styling.
   - Submits user group change requests and processes approval decisions.
   - Supports route-aware redirects for the list, detail, edit, and create pages.
 
+- `src/app/(workspace)/admin/approval-request/page.tsx`
+  - Approval Request search page.
+  - Renders the query panel with status and resource type filters and paginated results.
+
+- `src/app/(workspace)/admin/approval-request/[requestId]/page.tsx`
+  - Approval Request detail page.
+  - Shows request metadata, interpreted change details, and workflow history.
+
 - `src/app/(workspace)/[group]/[item]/page.tsx`
   - Dynamic placeholder page for sidebar menu items.
   - Resolves route params against centralized navigation data.
@@ -160,6 +168,20 @@ Shared non-visual utilities and application metadata.
 - `src/lib/user-groups.ts`
   - Server-side user group workflow module.
   - Supports user group search, detail lookups, pending-request lookups, maker submissions, and checker decisions.
+
+- `src/lib/approval-requests.ts`
+  - Server-side approval request query module.
+  - Supports paginated search with status and resource type filtering, and single-record detail lookups including workflow actions.
+
+- `src/lib/change-interpreters/index.ts`
+  - Registry that dispatches to resource-specific change interpreters.
+  - Returns a structured interpreted change result or null for unknown resource types.
+
+- `src/lib/change-interpreters/types.ts`
+  - Shared types for change interpreters: `InterpretedChange`, `InterpretedFieldChange`, `ChangeInterpreter`.
+
+- `src/lib/change-interpreters/user-group.ts`
+  - Interprets `USER_GROUP` resource type changes from `changed_fields` or before/after state snapshots.
 
 - `src/lib/utils.ts`
   - Shared utility helpers.
