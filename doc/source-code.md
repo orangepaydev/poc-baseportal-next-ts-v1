@@ -21,6 +21,13 @@ Local Docker Compose entry point for infrastructure services.
   - Starts a local MariaDB instance for development.
   - Mounts database initialization scripts from `docker-init/mariadb/init`.
 
+- `dev-resource-start.sh`
+  - Starts the local Docker Compose development resources in detached mode.
+
+- `dev-resource-shutdown.sh`
+  - Stops the local Docker Compose development resources.
+  - Removes the Compose-managed volumes so MariaDB can be reinitialized cleanly.
+
 ### `docker-init/mariadb/init/`
 
 MariaDB bootstrap assets used by the Docker container on first startup.
@@ -28,6 +35,10 @@ MariaDB bootstrap assets used by the Docker container on first startup.
 - `docker-init/mariadb/init/001-create-portaldb.sql`
   - Creates the `portaldb` database.
   - Creates and grants access to the `dbuser` development user.
+
+- `docker-init/mariadb/init/002-authz-approval-schema.sql`
+  - Creates the MariaDB schema for tenant-aware login, group permissions, approval workflow, and audit trail.
+  - Seeds baseline permission metadata for the current workspace navigation and admin resources.
 
 ## Source Tree
 

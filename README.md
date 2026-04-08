@@ -35,6 +35,24 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+### Local Development Resources
+
+Start the local MariaDB container:
+
+```bash
+./dev-resource-start.sh
+```
+
+The startup script launches the Compose services in detached mode and then immediately tails the container logs.
+
+Shut down the local MariaDB container and remove the Compose-managed volume:
+
+```bash
+./dev-resource-shutdown.sh
+```
+
+These scripts wrap the project Docker Compose commands so local database startup and teardown stay consistent.
+
 ### Build
 
 Build the application for production:
@@ -61,6 +79,8 @@ The build command will:
 
 ```
 poc-baseportal-next-ts-v1/
+├── dev-resource-start.sh  # Start Docker Compose development resources
+├── dev-resource-shutdown.sh # Stop Docker Compose resources and remove volumes
 ├── src/
 │   ├── app/              # Next.js app directory
 │   │   ├── globals.css   # Global styles
