@@ -1,9 +1,13 @@
 import type { ChangeInterpreter, InterpretedChange } from './types';
+import { organizationInterpreter } from './organization';
+import { userInterpreter } from './user';
 import { userGroupInterpreter } from './user-group';
 
 export type { InterpretedChange, InterpretedFieldChange } from './types';
 
 const interpreters: Record<string, ChangeInterpreter> = {
+  ORGANIZATION: organizationInterpreter,
+  USER: userInterpreter,
   USER_GROUP: userGroupInterpreter,
 };
 

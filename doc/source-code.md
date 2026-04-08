@@ -96,6 +96,56 @@ App Router entry points, route files, and global styling.
   - Submits user group change requests and processes approval decisions.
   - Supports route-aware redirects for the list, detail, edit, and create pages.
 
+- `src/app/(workspace)/admin/users/page.tsx`
+  - Admin Users search page.
+  - Renders the query panel and the query result panel for organisation-scoped users.
+
+- `src/app/(workspace)/admin/users/new/page.tsx`
+  - Create-request page for new users.
+  - Submits maker requests instead of inserting directly into the live table.
+
+- `src/app/(workspace)/admin/users/[userId]/page.tsx`
+  - User detail page.
+  - Shows top-level actions based on pending-request state and current permissions.
+
+- `src/app/(workspace)/admin/users/[userId]/edit/page.tsx`
+  - User edit page.
+  - Allows editing display name, email, user type, and status.
+
+- `src/app/(workspace)/admin/users/[userId]/delete-user-request-button.tsx`
+  - Route-local client component for the delete confirmation modal.
+  - Submits a delete maker request from the detail page.
+
+- `src/app/(workspace)/admin/users/actions.ts`
+  - Server actions for the Admin Users page.
+  - Submits user change requests and processes approval decisions.
+  - Supports route-aware redirects for the list, detail, edit, and create pages.
+
+- `src/app/(workspace)/admin/organization/page.tsx`
+  - Admin Organizations search page.
+  - Renders the query panel and the query result panel for organizations.
+
+- `src/app/(workspace)/admin/organization/new/page.tsx`
+  - Create-request page for new organizations.
+  - Submits maker requests instead of inserting directly into the live table.
+
+- `src/app/(workspace)/admin/organization/[organizationId]/page.tsx`
+  - Organization detail page.
+  - Shows top-level actions based on pending-request state and current permissions.
+
+- `src/app/(workspace)/admin/organization/[organizationId]/edit/page.tsx`
+  - Organization edit page.
+  - Allows editing organization name and status.
+
+- `src/app/(workspace)/admin/organization/[organizationId]/delete-organization-request-button.tsx`
+  - Route-local client component for the delete confirmation modal.
+  - Submits a delete maker request from the detail page.
+
+- `src/app/(workspace)/admin/organization/actions.ts`
+  - Server actions for the Admin Organization page.
+  - Submits organization change requests and processes approval decisions.
+  - Supports route-aware redirects for the list, detail, edit, and create pages.
+
 - `src/app/(workspace)/admin/audit-log/page.tsx`
   - Audit Log search page.
   - Renders the query panel with event type and resource type filters and paginated results.
@@ -174,6 +224,14 @@ Shared non-visual utilities and application metadata.
   - Server-side user group workflow module.
   - Supports user group search, detail lookups, pending-request lookups, maker submissions, and checker decisions.
 
+- `src/lib/users.ts`
+  - Server-side user workflow module.
+  - Supports user search, detail lookups, pending-request lookups, maker submissions, and checker decisions.
+
+- `src/lib/organizations.ts`
+  - Server-side organization workflow module.
+  - Supports organization search, detail lookups, pending-request lookups, maker submissions, and checker decisions.
+
 - `src/lib/audit-events.ts`
   - Server-side audit event query module.
   - Supports paginated search with event type and resource type filtering, and single-record detail lookups.
@@ -191,6 +249,12 @@ Shared non-visual utilities and application metadata.
 
 - `src/lib/change-interpreters/user-group.ts`
   - Interprets `USER_GROUP` resource type changes from `changed_fields` or before/after state snapshots.
+
+- `src/lib/change-interpreters/user.ts`
+  - Interprets `USER` resource type changes from `changed_fields` or before/after state snapshots.
+
+- `src/lib/change-interpreters/organization.ts`
+  - Interprets `ORGANIZATION` resource type changes from `changed_fields` or before/after state snapshots.
 
 - `src/lib/utils.ts`
   - Shared utility helpers.

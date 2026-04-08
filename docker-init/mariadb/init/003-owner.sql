@@ -56,6 +56,10 @@ FROM (
   UNION ALL SELECT 'OwnerUser', 'Owner User', 'Standard owner users with limited menu visibility.'
   UNION ALL SELECT 'UserGroupMaker', 'User Group Maker', 'Can submit create, update, and delete requests for user groups.'
   UNION ALL SELECT 'UserGroupChecker', 'User Group Checker', 'Can approve or reject pending user group requests.'
+  UNION ALL SELECT 'UserMaker', 'User Maker', 'Can submit create, update, and delete requests for users.'
+  UNION ALL SELECT 'UserChecker', 'User Checker', 'Can approve or reject pending user requests.'
+  UNION ALL SELECT 'OrganizationMaker', 'Organization Maker', 'Can submit create, update, and delete requests for organizations.'
+  UNION ALL SELECT 'OrganizationChecker', 'Organization Checker', 'Can approve or reject pending organization requests.'
 ) AS seed
 INNER JOIN organizations organization
   ON organization.organization_code = 'owner';
@@ -75,6 +79,12 @@ FROM (
   UNION ALL SELECT 'UserGroupMaker', 'root1'
   UNION ALL SELECT 'UserGroupChecker', 'root1'
   UNION ALL SELECT 'UserGroupChecker', 'root2'
+  UNION ALL SELECT 'UserMaker', 'root1'
+  UNION ALL SELECT 'UserChecker', 'root1'
+  UNION ALL SELECT 'UserChecker', 'root2'
+  UNION ALL SELECT 'OrganizationMaker', 'root1'
+  UNION ALL SELECT 'OrganizationChecker', 'root1'
+  UNION ALL SELECT 'OrganizationChecker', 'root2'
 ) AS seed
 INNER JOIN organizations organization
   ON organization.organization_code = 'owner'
@@ -104,8 +114,22 @@ FROM (
   UNION ALL SELECT 'OwnerAdmin', 'USER_GROUP_READ'
   UNION ALL SELECT 'OwnerAdmin', 'AUDIT_LOG_READ'
 
+  UNION ALL SELECT 'OwnerAdmin', 'MENU_ADMIN_ORGANIZATION'
+  UNION ALL SELECT 'OwnerAdmin', 'ORGANIZATION_READ'
+
   UNION ALL SELECT 'OwnerAdmin', 'MENU_ADMIN_APPROVAL_REQUEST'
   UNION ALL SELECT 'OwnerAdmin', 'APPROVAL_REQUEST_READ'
+
+  UNION ALL SELECT 'OrganizationMaker', 'MENU_ADMIN_ORGANIZATION'
+  UNION ALL SELECT 'OrganizationMaker', 'ORGANIZATION_READ'
+  UNION ALL SELECT 'OrganizationMaker', 'ORGANIZATION_WRITE'
+
+  UNION ALL SELECT 'OrganizationChecker', 'MENU_ADMIN_ORGANIZATION'
+  UNION ALL SELECT 'OrganizationChecker', 'ORGANIZATION_READ'
+  UNION ALL SELECT 'OrganizationChecker', 'ORGANIZATION_APPROVE'
+
+  UNION ALL SELECT 'OrganizationChecker', 'MENU_ADMIN_APPROVAL_REQUEST'
+  UNION ALL SELECT 'OrganizationChecker', 'APPROVAL_REQUEST_READ'
 
   UNION ALL SELECT 'UserGroupMaker', 'MENU_ADMIN_USER_GROUP'
   UNION ALL SELECT 'UserGroupMaker', 'USER_GROUP_READ'
@@ -117,6 +141,17 @@ FROM (
 
   UNION ALL SELECT 'UserGroupChecker', 'MENU_ADMIN_APPROVAL_REQUEST'
   UNION ALL SELECT 'UserGroupChecker', 'APPROVAL_REQUEST_READ'
+
+  UNION ALL SELECT 'UserMaker', 'MENU_ADMIN_USERS'
+  UNION ALL SELECT 'UserMaker', 'USER_READ'
+  UNION ALL SELECT 'UserMaker', 'USER_WRITE'
+
+  UNION ALL SELECT 'UserChecker', 'MENU_ADMIN_USERS'
+  UNION ALL SELECT 'UserChecker', 'USER_READ'
+  UNION ALL SELECT 'UserChecker', 'USER_APPROVE'
+
+  UNION ALL SELECT 'UserChecker', 'MENU_ADMIN_APPROVAL_REQUEST'
+  UNION ALL SELECT 'UserChecker', 'APPROVAL_REQUEST_READ'
 
   UNION ALL SELECT 'OwnerUser', 'MENU_TRANSACTION_OVERVIEW'
   UNION ALL SELECT 'OwnerUser', 'MENU_TRANSACTION_INVOICES'

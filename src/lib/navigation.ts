@@ -67,11 +67,22 @@ export const navigationGroups: NavigationGroup[] = [
         title: 'Users',
         slug: 'users',
         description:
-          'Placeholder view for user lifecycle, status, and ownership.',
+          'Manage organisation-scoped users through maker-checker requests.',
         href: '/admin/users',
         access: {
           menuPermissionCode: 'MENU_ADMIN_USERS',
           requiredPermissionCodes: ['USER_READ'],
+        },
+      },
+      {
+        title: 'Organizations',
+        slug: 'organization',
+        description:
+          'Manage organizations through maker-checker requests.',
+        href: '/admin/organization',
+        access: {
+          menuPermissionCode: 'MENU_ADMIN_ORGANIZATION',
+          requiredPermissionCodes: ['ORGANIZATION_READ'],
         },
       },
       {
