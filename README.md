@@ -75,6 +75,12 @@ poc-baseportal-next-ts-v1/
 └── package.json          # Dependencies and scripts
 ```
 
+## Copilot Instructions
+
+Project-wide agent instructions live in [.github/copilot-instructions.md](.github/copilot-instructions.md).
+
+That file defines the default guidance for AI-assisted work in this repository, including the requirement to read the Markdown files in the `doc` folder before making changes.
+
 ## UI Components
 
 The home page includes:
