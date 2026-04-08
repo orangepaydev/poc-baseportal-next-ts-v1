@@ -33,4 +33,6 @@ Documentation expectations:
 - Update `doc/source-code.md` when adding new source folders or new categories of source files, such as hooks, providers, services, stores, or new route patterns.
 - Keep documentation concise, implementation-oriented, and useful as context for future prompt instructions.
 
+10. When generating Query, View, Edit, Create, or Delete pages for a database resource, read `doc/ui-page.md` for reference implementations, panel types, route conventions, and page patterns. Use the User Group pages as the canonical examples.
+
 If the task conflicts with the documentation, call out the mismatch and prefer the documented behavior until the project documentation is updated.
