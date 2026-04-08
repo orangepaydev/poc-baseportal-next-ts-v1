@@ -118,8 +118,16 @@ Important fields:
 - `status`: pending or final workflow state
 - `before_state`: JSON snapshot before the change
 - `after_state`: JSON snapshot after the change
+- `changed_fields`: optional JSON summary of the fields or relationship elements that changed
+- `change_patch`: optional JSON instruction payload that the application can use to apply the approved change deterministically
 
 This table allows the approver to see exactly what is changing before the live tables are modified.
+
+Recommended usage:
+
+- Treat `before_state` and `after_state` as the canonical review snapshots.
+- Use `changed_fields` to avoid recalculating diffs in every review UI.
+- Use `change_patch` for execution-oriented operations, especially `ADD` and `REMOVE` against join tables such as `user_group_permissions` and `user_group_memberships`.
 
 ### approval_locks
 
@@ -178,18 +186,20 @@ Recommended examples:
 ### Add Permission to Group
 
 1. Insert a pending approval request for the target group and permission.
-2. Lock `GROUP:{group_id}:PERMISSION:{permission_code}`.
-3. On approval, insert into `user_group_permissions`.
-4. Write workflow and audit entries.
-5. Remove the lock.
+2. Store the proposed relationship in `after_state`, a review-friendly summary in `changed_fields`, and an executable insert payload in `change_patch`.
+3. Lock `GROUP:{group_id}:PERMISSION:{permission_code}`.
+4. On approval, execute the intended insert into `user_group_permissions`.
+5. Write workflow and audit entries.
+6. Remove the lock.
 
 ### Add User to Group
 
 1. Insert a pending approval request for the target group and user.
-2. Lock `GROUP:{group_id}:USER:{user_id}`.
-3. On approval, insert into `user_group_memberships`.
-4. Write workflow and audit entries.
-5. Remove the lock.
+2. Store the proposed relationship in `after_state`, a review-friendly summary in `changed_fields`, and an executable insert payload in `change_patch`.
+3. Lock `GROUP:{group_id}:USER:{user_id}`.
+4. On approval, execute the intended insert into `user_group_memberships`.
+5. Write workflow and audit entries.
+6. Remove the lock.
 
 ## Suggested Query Shapes For UI
 
@@ -198,7 +208,7 @@ The follow-up UI can build on these patterns:
 - login lookup by organization code and username
 - user effective permissions by joining `user_group_memberships`, `user_group_permissions`, and `permissions`
 - approval inbox filtered by `approval_requests.status = 'PENDING'`
-- approval detail view using `before_state`, `after_state`, and `approval_request_actions`
+- approval detail view using `before_state`, `after_state`, `changed_fields`, `change_patch`, and `approval_request_actions`
 - audit log view filtered by organization, actor, resource type, date range, and approval request
 
 ## Seed Data Included In SQL
@@ -215,3 +225,5 @@ The schema SQL also seeds:
 - The schema is written for MariaDB.
 - The SQL bootstrap file lives in `docker-init/mariadb/init` so it runs automatically on first startup of an empty database volume.
 - The application should treat live tables as approved state and approval tables as pending workflow state.
+- `changed_fields` is intended for review-time display and should be generated when the request is created.
+- `change_patch` is intended for approval-time execution and is especially useful for relationship tables where the business change is an add or remove operation rather than a traditional row update.

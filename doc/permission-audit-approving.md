@@ -74,6 +74,7 @@ The schema also supports the same approval workflow for:
   - remove
   - update
 - Each pending request stores before and after snapshots so the approver can review exactly what changed.
+- Each pending request can also store a precomputed `changed_fields` payload for review screens and a `change_patch` payload for deterministic execution after approval.
 - When a pending change exists for a resource, that resource is locked from receiving another pending change.
 - The lock is released only when the request is approved, rejected, or cancelled.
 
@@ -98,6 +99,15 @@ These rules are not explicitly stated in the original requirement, but the schem
 - cancelled requests should keep their history
 - only approved records should appear in the live business tables
 - login attempts can also be written to the audit trail
+- `changed_fields` should be generated when the request is submitted, not recalculated differently in each consumer
+- `change_patch` should be treated as an application-owned command payload and validated before execution
+
+## Review Payload Guidance
+
+- `before_state` and `after_state` remain the canonical snapshots for audit and troubleshooting.
+- `changed_fields` should summarize the business-visible differences so review UIs do not need to diff arbitrary JSON every time.
+- `change_patch` should describe the exact operation to execute on approval.
+- For join-table style changes such as group permission assignments, `changed_fields` should describe the relationship being added or removed rather than only mirroring raw SQL columns.
 
 ## UI Implications
 

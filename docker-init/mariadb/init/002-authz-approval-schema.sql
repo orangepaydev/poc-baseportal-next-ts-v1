@@ -119,6 +119,8 @@ CREATE TABLE approval_requests (
   summary VARCHAR(255) NOT NULL,
   before_state JSON NULL,
   after_state JSON NULL,
+  changed_fields JSON NULL,
+  change_patch JSON NULL,
   submitted_by_user_id BIGINT UNSIGNED NULL,
   submitted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   reviewed_by_user_id BIGINT UNSIGNED NULL,
