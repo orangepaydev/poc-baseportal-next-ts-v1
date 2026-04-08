@@ -66,21 +66,16 @@ export default async function EditUserGroupPage({
             <p className="text-xs font-semibold tracking-[0.22em] text-cyan-700 uppercase">
               Edit User Group
             </p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-              Edit {group.groupName}
-            </h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
-              For now, only the user group name is editable from this page. The
-              change is submitted as a maker request for later approval.
-            </p>
           </div>
 
-          <Button variant="outline" className="rounded-2xl" asChild>
-            <Link href={detailPath}>
-              <ArrowLeft className="size-4" />
-              Back to detail
-            </Link>
-          </Button>
+          <div className="flex w-full flex-wrap items-center justify-end gap-3 md:w-auto">
+            <Button variant="outline" className="rounded-2xl" asChild>
+              <Link href={detailPath}>
+                <ArrowLeft className="size-4" />
+                Back to detail
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {queryParams.notice ? (
@@ -107,11 +102,6 @@ export default async function EditUserGroupPage({
           >
             <input name="groupId" type="hidden" value={group.id} />
             <input name="status" type="hidden" value={group.status} />
-            <input
-              name="description"
-              type="hidden"
-              value={group.description ?? ''}
-            />
             <input name="redirectTo" type="hidden" value={detailPath} />
 
             <label className="space-y-2 text-sm font-medium text-slate-700">
@@ -124,10 +114,15 @@ export default async function EditUserGroupPage({
               />
             </label>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
-              Group code remains {group.groupCode}. Description and active
-              status stay unchanged in this version of the edit flow.
-            </div>
+            <label className="space-y-2 text-sm font-medium text-slate-700">
+              <span>Description</span>
+              <textarea
+                name="description"
+                rows={3}
+                defaultValue={group.description ?? ''}
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-normal text-slate-900 transition outline-none focus:border-cyan-500 focus:bg-white"
+              />
+            </label>
 
             <div className="flex justify-end">
               <Button
