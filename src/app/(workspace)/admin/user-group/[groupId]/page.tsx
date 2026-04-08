@@ -91,7 +91,7 @@ export default async function UserGroupDetailPage({
                 className="rounded-2xl bg-slate-950 text-white hover:bg-slate-800"
                 asChild
               >
-                <Link href={`${detailPath}/approve-request`}>
+                <Link href={`/admin/approval-request/${pendingRequest!.id}`}>
                   <ShieldCheck className="size-4" />
                   Approve Request
                 </Link>
