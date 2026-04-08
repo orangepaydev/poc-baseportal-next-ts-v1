@@ -130,73 +130,78 @@ export default async function UserGroupDetailPage({
       </section>
 
       <section className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-            <p className="text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
-              Internal ID
-            </p>
-            <p className="mt-2 text-lg font-semibold text-slate-950">
-              {group.id}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-            <p className="text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
-              Group Code
-            </p>
-            <p className="mt-2 text-lg font-semibold text-slate-950">
-              {group.groupCode}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-            <p className="text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
-              Record Status
-            </p>
-            <p className="mt-2 text-lg font-semibold text-slate-950">
-              {group.status}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-            <p className="text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
-              Approval Request
-            </p>
-            <p className="mt-2 text-lg font-semibold text-slate-950">
-              {pendingRequest ? 'Pending request exists' : 'No pending request'}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-            <p className="text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
-              Members
-            </p>
-            <p className="mt-2 text-lg font-semibold text-slate-950">
-              {group.memberCount}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-            <p className="text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
-              Permissions
-            </p>
-            <p className="mt-2 text-lg font-semibold text-slate-950">
-              {group.permissionCount}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-4 rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-          <p className="text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
-            Description
-          </p>
-          <p className="mt-3 text-sm leading-6 text-slate-600">
-            {group.description || 'No description provided.'}
-          </p>
-          <p className="mt-4 text-sm text-slate-500">
-            Updated {formatDate(group.updatedAt)}
-          </p>
-          {pendingRequest ? (
-            <p className="mt-2 text-sm text-amber-700">
-              Pending request: {pendingRequest.summary}
-            </p>
-          ) : null}
-        </div>
+        <table className="w-full text-sm">
+          <tbody>
+            <tr className="border-b border-slate-200">
+              <td className="py-3 pr-4 text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
+                Internal ID
+              </td>
+              <td className="py-3 pr-8 font-semibold text-slate-950">
+                {group.id}
+              </td>
+              <td className="py-3 pr-4 text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
+                Group Code
+              </td>
+              <td className="py-3 font-semibold text-slate-950">
+                {group.groupCode}
+              </td>
+            </tr>
+            <tr className="border-b border-slate-200">
+              <td className="py-3 pr-4 text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
+                Record Status
+              </td>
+              <td className="py-3 pr-8 font-semibold text-slate-950">
+                {group.status}
+              </td>
+              <td className="py-3 pr-4 text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
+                Approval Request
+              </td>
+              <td className="py-3 font-semibold text-slate-950">
+                {pendingRequest
+                  ? 'Pending request exists'
+                  : 'No pending request'}
+              </td>
+            </tr>
+            <tr className="border-b border-slate-200">
+              <td className="py-3 pr-4 text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
+                Members
+              </td>
+              <td className="py-3 pr-8 font-semibold text-slate-950">
+                {group.memberCount}
+              </td>
+              <td className="py-3 pr-4 text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
+                Permissions
+              </td>
+              <td className="py-3 font-semibold text-slate-950">
+                {group.permissionCount}
+              </td>
+            </tr>
+            <tr className="border-b border-slate-200">
+              <td className="py-3 pr-4 text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
+                Updated
+              </td>
+              <td className="py-3 pr-8 font-semibold text-slate-950">
+                {formatDate(group.updatedAt)}
+              </td>
+              <td className="py-3 pr-4 text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
+                Description
+              </td>
+              <td className="py-3 leading-6 text-slate-600">
+                {group.description || 'No description provided.'}
+              </td>
+            </tr>
+            {pendingRequest ? (
+              <tr>
+                <td className="py-3 pr-4 text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
+                  Pending Request
+                </td>
+                <td colSpan={3} className="py-3 font-semibold text-amber-700">
+                  {pendingRequest.summary}
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
       </section>
     </div>
   );
