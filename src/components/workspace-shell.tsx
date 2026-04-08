@@ -231,31 +231,7 @@ export function WorkspaceShell({
           </aside>
 
           <section className="min-w-0 flex-1 bg-white/65 p-4 sm:p-6">
-            <div className="flex h-full flex-col gap-6">
-              <div className="rounded-[24px] border border-slate-200 bg-white px-5 py-6 shadow-sm sm:px-7">
-                <p className="text-sm font-semibold tracking-[0.24em] text-cyan-700 uppercase">
-                  Main Panel
-                </p>
-                <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                  <div className="max-w-2xl">
-                    <h2 className="text-3xl font-semibold tracking-tight text-slate-950">
-                      Menu-driven workspace overview
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">
-                      The right panel renders the active page content while
-                      keeping the sidebar folders and menu items reusable across
-                      the workspace.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-600">
-                    {navigationGroups.length} folders · {navigationItemCount}{' '}
-                    menu items · collapsible sidebar
-                  </div>
-                </div>
-              </div>
-
-              {children}
-            </div>
+            {children}
           </section>
         </div>
       </div>

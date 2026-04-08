@@ -46,6 +46,8 @@ This document describes the current login and session model for the workspace.
 - The helper also derives the menu items visible to the current user from the permission catalog.
 - Sidebar and landing-page navigation are filtered from that same permission context.
 - Route handlers for workspace menu pages enforce the same access rules so hidden links cannot still be opened directly.
+- Any new protected page must perform its permission check before loading page data.
+- Prefer `requireNavigationItemAccess()` for menu-driven pages so the menu permission and any required resource permissions are enforced before queries run.
 
 ## Login Audit Trail
 

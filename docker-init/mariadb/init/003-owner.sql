@@ -52,6 +52,8 @@ SELECT
 FROM (
   SELECT 'OwnerAdmin' AS group_code, 'Owner Admin' AS group_name, 'Administrative group for owner root users.' AS description
   UNION ALL SELECT 'OwnerUser', 'Owner User', 'Standard owner users with limited menu visibility.'
+  UNION ALL SELECT 'UserGroupMaker', 'User Group Maker', 'Can submit create, update, and delete requests for user groups.'
+  UNION ALL SELECT 'UserGroupChecker', 'User Group Checker', 'Can approve or reject pending user group requests.'
 ) AS seed
 INNER JOIN organizations organization
   ON organization.organization_code = 'owner';
@@ -68,6 +70,9 @@ FROM (
   UNION ALL SELECT 'OwnerAdmin', 'root2'
   UNION ALL SELECT 'OwnerUser', 'user1'
   UNION ALL SELECT 'OwnerUser', 'user2'
+  UNION ALL SELECT 'UserGroupMaker', 'root1'
+  UNION ALL SELECT 'UserGroupChecker', 'root1'
+  UNION ALL SELECT 'UserGroupChecker', 'root2'
 ) AS seed
 INNER JOIN organizations organization
   ON organization.organization_code = 'owner'
@@ -82,7 +87,7 @@ INSERT IGNORE INTO user_group_permissions (
   user_group_id,
   permission_id
 )
-SELECT
+SELECTMenu-driven workspace overview
   user_group.id,
   permission.id
 FROM (
@@ -95,6 +100,14 @@ FROM (
   UNION ALL SELECT 'OwnerAdmin', 'USER_READ'
   UNION ALL SELECT 'OwnerAdmin', 'USER_GROUP_READ'
   UNION ALL SELECT 'OwnerAdmin', 'AUDIT_LOG_READ'
+
+  UNION ALL SELECT 'UserGroupMaker', 'MENU_ADMIN_USER_GROUP'
+  UNION ALL SELECT 'UserGroupMaker', 'USER_GROUP_READ'
+  UNION ALL SELECT 'UserGroupMaker', 'USER_GROUP_WRITE'
+
+  UNION ALL SELECT 'UserGroupChecker', 'MENU_ADMIN_USER_GROUP'
+  UNION ALL SELECT 'UserGroupChecker', 'USER_GROUP_READ'
+  UNION ALL SELECT 'UserGroupChecker', 'USER_GROUP_APPROVE'
 
   UNION ALL SELECT 'OwnerUser', 'MENU_TRANSACTION_OVERVIEW'
   UNION ALL SELECT 'OwnerUser', 'MENU_TRANSACTION_INVOICES'

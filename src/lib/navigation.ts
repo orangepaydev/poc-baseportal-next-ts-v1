@@ -86,6 +86,17 @@ export const navigationGroups: NavigationGroup[] = [
         },
       },
       {
+        title: 'User Group',
+        slug: 'user-group',
+        description:
+          'Manage organisation-scoped user groups through maker-checker requests.',
+        href: '/admin/user-group',
+        access: {
+          menuPermissionCode: 'MENU_ADMIN_USER_GROUP',
+          requiredPermissionCodes: ['USER_GROUP_READ'],
+        },
+      },
+      {
         title: 'Audit Log',
         slug: 'audit-log',
         description:

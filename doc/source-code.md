@@ -71,6 +71,34 @@ App Router entry points, route files, and global styling.
   - Renders overview cards for the documented navigation groups and links into route pages.
   - Shows the authenticated organization and user context.
 
+- `src/app/(workspace)/admin/user-group/page.tsx`
+  - Dedicated Admin User Group search page.
+  - Renders the query panel and the query result panel for organisation-scoped user groups.
+
+- `src/app/(workspace)/admin/user-group/new/page.tsx`
+  - Create-request page for new user groups.
+  - Submits maker requests instead of inserting directly into the live table.
+
+- `src/app/(workspace)/admin/user-group/[groupId]/page.tsx`
+  - User group detail page.
+  - Shows top-level actions based on pending-request state and current permissions.
+
+- `src/app/(workspace)/admin/user-group/[groupId]/edit/page.tsx`
+  - User group edit page.
+  - Allows editing the user group name only for the current version of the workflow.
+
+- `src/app/(workspace)/admin/user-group/[groupId]/approve-request/page.tsx`
+  - Placeholder route for the future approval-request experience.
+
+- `src/app/(workspace)/admin/user-group/[groupId]/delete-user-group-request-button.tsx`
+  - Route-local client component for the delete confirmation modal.
+  - Submits a delete maker request from the detail page.
+
+- `src/app/(workspace)/admin/user-group/actions.ts`
+  - Server actions for the Admin User Group page.
+  - Submits user group change requests and processes approval decisions.
+  - Supports route-aware redirects for the list, detail, edit, and create pages.
+
 - `src/app/(workspace)/[group]/[item]/page.tsx`
   - Dynamic placeholder page for sidebar menu items.
   - Resolves route params against centralized navigation data.
@@ -128,6 +156,10 @@ Shared non-visual utilities and application metadata.
 - `src/lib/navigation.ts`
   - Central source of truth for navigation groups and menu items.
   - Exposes route metadata and permission requirements used by the sidebar, home page, and dynamic item pages.
+
+- `src/lib/user-groups.ts`
+  - Server-side user group workflow module.
+  - Supports user group search, detail lookups, pending-request lookups, maker submissions, and checker decisions.
 
 - `src/lib/utils.ts`
   - Shared utility helpers.
