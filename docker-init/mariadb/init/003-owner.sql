@@ -87,7 +87,8 @@ INSERT IGNORE INTO user_group_permissions (
   user_group_id,
   permission_id
 )
-SELECTMenu-driven workspace overview
+SELECT 
+  -- Menu-driven workspace overview
   user_group.id,
   permission.id
 FROM (
