@@ -1,0 +1,7 @@
+CREATE DATABASE IF NOT EXISTS portaldb
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+CREATE USER IF NOT EXISTS 'dbuser'@'%' IDENTIFIED BY 'dbpass123';
+GRANT ALL PRIVILEGES ON portaldb.* TO 'dbuser'@'%';
+FLUSH PRIVILEGES;

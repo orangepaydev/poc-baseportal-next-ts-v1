@@ -9,6 +9,25 @@ This document describes where the application source code lives and what each cu
 - Application source code lives under `src/`.
 - Documentation lives under `doc/`.
 - Project configuration files live at the repository root.
+- Local development infrastructure files may also live at the repository root or under dedicated setup folders.
+
+## Local Infrastructure
+
+### `docker-compose.yml`
+
+Local Docker Compose entry point for infrastructure services.
+
+- `docker-compose.yml`
+  - Starts a local MariaDB instance for development.
+  - Mounts database initialization scripts from `docker-init/mariadb/init`.
+
+### `docker-init/mariadb/init/`
+
+MariaDB bootstrap assets used by the Docker container on first startup.
+
+- `docker-init/mariadb/init/001-create-portaldb.sql`
+  - Creates the `portaldb` database.
+  - Creates and grants access to the `dbuser` development user.
 
 ## Source Tree
 
