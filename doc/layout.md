@@ -4,6 +4,8 @@
 
 This app uses a three-region workspace shell:
 
+See `doc/source-code.md` for the current source file map and where each part of the implementation lives.
+
 1. A top utility panel for global actions.
 2. A left navigation panel for folders and menu items.
 3. A right main panel for page content.
@@ -30,7 +32,7 @@ This app uses a three-region workspace shell:
 
 ## Current Navigation Model
 
-The navigation is currently driven by static data in the home page component.
+The navigation is driven by centralized data in `src/lib/navigation.ts`.
 
 - `Transactin`
   - `Overview`
@@ -44,8 +46,13 @@ The navigation is currently driven by static data in the home page component.
 
 ## Implementation Notes
 
-- The collapsible behavior is handled client-side in the page component.
+- The workspace shell is handled by `src/components/workspace-shell.tsx` and wraps app routes from the root layout.
+- The left menu supports two levels of collapsing:
+  - the full sidebar can collapse from the top utility panel toggle
+  - each folder section can expand or collapse independently
+- Menu items are real links and route to placeholder pages under `src/app/[group]/[item]/page.tsx`.
+- Navigation metadata is defined in `src/lib/navigation.ts` and reused by the shell and routed pages.
 - The shell is responsive:
   - On larger screens the left panel shrinks when collapsed.
   - On smaller screens the panel is hidden when collapsed and shown as an overlay when opened.
-- If future LLM tasks need to extend navigation, keep folder data centralized and reuse it for both the sidebar and the main content cards.
+- If future LLM tasks need to extend navigation, keep folder data centralized and reuse it for both the sidebar and page entry cards.

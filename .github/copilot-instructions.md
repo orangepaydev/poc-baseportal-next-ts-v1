@@ -19,6 +19,7 @@ For every task in this project:
    - collapsible left navigation
    - right main content panel
 8. If a task introduces a major change, a reusable UI pattern, or a common component, document it in the `doc` folder so future prompts can use that documentation as project context.
+9. Keep `doc/source-code.md` up to date when source code locations change or when a new type of source code file is introduced.
 
 Current documented navigation groups:
 
@@ -29,6 +30,7 @@ Documentation expectations:
 
 - Add or update Markdown in the `doc` folder when introducing major architectural or workflow changes.
 - Add or update Markdown in the `doc` folder when creating shared or commonly reused components.
+- Update `doc/source-code.md` when adding new source folders or new categories of source files, such as hooks, providers, services, stores, or new route patterns.
 - Keep documentation concise, implementation-oriented, and useful as context for future prompt instructions.
 
 If the task conflicts with the documentation, call out the mismatch and prefer the documented behavior until the project documentation is updated.
