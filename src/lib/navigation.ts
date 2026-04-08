@@ -1,8 +1,14 @@
+export type NavigationAccess = {
+  menuPermissionCode: string;
+  requiredPermissionCodes?: string[];
+};
+
 export type NavigationItem = {
   title: string;
   slug: string;
   description: string;
   href: string;
+  access: NavigationAccess;
 };
 
 export type NavigationGroup = {
@@ -25,6 +31,9 @@ export const navigationGroups: NavigationGroup[] = [
         description:
           'High-level transaction metrics, trends, and status indicators.',
         href: '/transaction/overview',
+        access: {
+          menuPermissionCode: 'MENU_TRANSACTION_OVERVIEW',
+        },
       },
       {
         title: 'Invoices',
@@ -32,6 +41,9 @@ export const navigationGroups: NavigationGroup[] = [
         description:
           'Placeholder view for invoice queues, aging, and approval tasks.',
         href: '/transaction/invoices',
+        access: {
+          menuPermissionCode: 'MENU_TRANSACTION_INVOICES',
+        },
       },
       {
         title: 'Payments',
@@ -39,6 +51,9 @@ export const navigationGroups: NavigationGroup[] = [
         description:
           'Placeholder view for payment monitoring, reconciliation, and issues.',
         href: '/transaction/payments',
+        access: {
+          menuPermissionCode: 'MENU_TRANSACTION_PAYMENTS',
+        },
       },
     ],
   },
@@ -54,6 +69,10 @@ export const navigationGroups: NavigationGroup[] = [
         description:
           'Placeholder view for user lifecycle, status, and ownership.',
         href: '/admin/users',
+        access: {
+          menuPermissionCode: 'MENU_ADMIN_USERS',
+          requiredPermissionCodes: ['USER_READ'],
+        },
       },
       {
         title: 'Roles',
@@ -61,6 +80,10 @@ export const navigationGroups: NavigationGroup[] = [
         description:
           'Placeholder view for role definitions, assignments, and policy checks.',
         href: '/admin/roles',
+        access: {
+          menuPermissionCode: 'MENU_ADMIN_ROLES',
+          requiredPermissionCodes: ['USER_GROUP_READ'],
+        },
       },
       {
         title: 'Audit Log',
@@ -68,6 +91,10 @@ export const navigationGroups: NavigationGroup[] = [
         description:
           'Placeholder view for operational history, traceability, and reviews.',
         href: '/admin/audit-log',
+        access: {
+          menuPermissionCode: 'MENU_ADMIN_AUDIT_LOG',
+          requiredPermissionCodes: ['AUDIT_LOG_READ'],
+        },
       },
     ],
   },
@@ -92,4 +119,8 @@ export function findNavigationItem(groupSlug: string, itemSlug: string) {
   }
 
   return { group, item };
+}
+
+export function countNavigationItems(groups: NavigationGroup[]) {
+  return groups.reduce((count, group) => count + group.items.length, 0);
 }

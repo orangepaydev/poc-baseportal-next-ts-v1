@@ -86,15 +86,27 @@ SELECT
   user_group.id,
   permission.id
 FROM (
-  SELECT 'MENU_TRANSACTION_OVERVIEW' AS permission_code
-  UNION ALL SELECT 'MENU_TRANSACTION_INVOICES'
-  UNION ALL SELECT 'MENU_ADMIN_USERS'
-  UNION ALL SELECT 'MENU_ADMIN_ROLES'
+  SELECT 'OwnerAdmin' AS group_code, 'MENU_TRANSACTION_OVERVIEW' AS permission_code
+  UNION ALL SELECT 'OwnerAdmin', 'MENU_TRANSACTION_INVOICES'
+  UNION ALL SELECT 'OwnerAdmin', 'MENU_TRANSACTION_PAYMENTS'
+  UNION ALL SELECT 'OwnerAdmin', 'MENU_ADMIN_USERS'
+  UNION ALL SELECT 'OwnerAdmin', 'MENU_ADMIN_ROLES'
+  UNION ALL SELECT 'OwnerAdmin', 'MENU_ADMIN_AUDIT_LOG'
+  UNION ALL SELECT 'OwnerAdmin', 'USER_READ'
+  UNION ALL SELECT 'OwnerAdmin', 'USER_GROUP_READ'
+  UNION ALL SELECT 'OwnerAdmin', 'AUDIT_LOG_READ'
+
+  UNION ALL SELECT 'OwnerUser', 'MENU_TRANSACTION_OVERVIEW'
+  UNION ALL SELECT 'OwnerUser', 'MENU_TRANSACTION_INVOICES'
+  UNION ALL SELECT 'OwnerUser', 'MENU_ADMIN_USERS'
+  UNION ALL SELECT 'OwnerUser', 'MENU_ADMIN_ROLES'
+  UNION ALL SELECT 'OwnerUser', 'USER_READ'
+  UNION ALL SELECT 'OwnerUser', 'USER_GROUP_READ'
 ) AS seed
 INNER JOIN organizations organization
   ON organization.organization_code = 'owner'
 INNER JOIN user_groups user_group
   ON user_group.organization_id = organization.id
-  AND user_group.group_code = 'OwnerUser'
+  AND user_group.group_code = seed.group_code
 INNER JOIN permissions permission
   ON permission.permission_code = seed.permission_code;

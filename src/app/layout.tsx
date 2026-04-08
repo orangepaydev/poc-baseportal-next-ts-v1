@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
-import { WorkspaceShell } from '@/components/workspace-shell';
-
 export const metadata: Metadata = {
   title: 'BasePortal Workspace',
   description: 'Multi-panel workspace layout with collapsible navigation',
@@ -16,7 +14,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="text-foreground min-h-screen bg-[linear-gradient(180deg,rgba(241,245,249,0.95),rgba(255,255,255,1))] font-[family-name:ui-sans-serif] antialiased">
-        <WorkspaceShell>{children}</WorkspaceShell>
+        {children}
       </body>
     </html>
   );

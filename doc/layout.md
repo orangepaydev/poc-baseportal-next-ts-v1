@@ -46,11 +46,15 @@ The navigation is driven by centralized data in `src/lib/navigation.ts`.
 
 ## Implementation Notes
 
-- The workspace shell is handled by `src/components/workspace-shell.tsx` and wraps app routes from the root layout.
+- The workspace shell is handled by `src/components/workspace-shell.tsx`.
+- Protected workspace routes are wrapped by `src/app/(workspace)/layout.tsx`.
+- The login route lives outside the shell at `src/app/(auth)/login/page.tsx`.
+- Sidebar navigation is filtered by the authenticated user's effective permissions.
 - The left menu supports two levels of collapsing:
   - the full sidebar can collapse from the top utility panel toggle
   - each folder section can expand or collapse independently
-- Menu items are real links and route to placeholder pages under `src/app/[group]/[item]/page.tsx`.
+- Menu items are real links and route to placeholder pages under `src/app/(workspace)/[group]/[item]/page.tsx`.
+- Direct access to protected menu routes is also checked server-side before placeholder content renders.
 - Navigation metadata is defined in `src/lib/navigation.ts` and reused by the shell and routed pages.
 - The shell is responsive:
   - On larger screens the left panel fully hides when collapsed.

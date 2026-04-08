@@ -56,13 +56,22 @@ App Router entry points, route files, and global styling.
 - `src/app/layout.tsx`
   - Root layout for the app.
   - Imports global CSS.
-  - Wraps all routed content with the shared workspace shell.
+  - Provides the shared HTML and body wrapper for all route groups.
 
-- `src/app/page.tsx`
-  - Home page.
+- `src/app/(auth)/login/page.tsx`
+  - Login page rendered outside the workspace shell.
+  - Submits tenant-aware credentials for organization, user, and password.
+
+- `src/app/(workspace)/layout.tsx`
+  - Protected workspace layout.
+  - Requires a valid session cookie before rendering the shared workspace shell.
+
+- `src/app/(workspace)/page.tsx`
+  - Protected home page.
   - Renders overview cards for the documented navigation groups and links into route pages.
+  - Shows the authenticated organization and user context.
 
-- `src/app/[group]/[item]/page.tsx`
+- `src/app/(workspace)/[group]/[item]/page.tsx`
   - Dynamic placeholder page for sidebar menu items.
   - Resolves route params against centralized navigation data.
 
@@ -77,7 +86,7 @@ Reusable React components used across routes.
 - `src/components/workspace-shell.tsx`
   - Shared client-side workspace shell.
   - Owns the top panel, collapsible left navigation, and main content frame.
-  - Reads navigation metadata from `src/lib/navigation.ts`.
+  - Renders only the navigation groups visible to the authenticated user.
 
 ### `src/components/ui/`
 
@@ -91,9 +100,34 @@ Shared UI primitives.
 
 Shared non-visual utilities and application metadata.
 
+- `src/lib/auth/types.ts`
+  - Shared authenticated-session type used by server modules and UI components.
+
+- `src/lib/auth/session.ts`
+  - Creates, verifies, reads, and clears the signed session cookie.
+  - Exposes helpers for protected routes.
+
+- `src/lib/auth/login.ts`
+  - Verifies tenant-aware credentials against the `organizations` and `users` tables.
+  - Produces the authenticated session payload after successful verification.
+  - Updates `users.last_login_at` on successful login.
+
+- `src/lib/auth/actions.ts`
+  - Server actions for login and logout.
+  - Sets or clears the signed session cookie and redirects accordingly.
+
+- `src/lib/auth/audit.ts`
+  - Writes login success and failure events into `audit_events`.
+  - Captures request metadata such as IP address and user agent when available.
+
+- `src/lib/auth/authorization.ts`
+  - Loads the authenticated user's effective permission grants through group membership.
+  - Derives menu visibility metadata for the shell and landing page.
+  - Enforces route-level workspace menu access.
+
 - `src/lib/navigation.ts`
   - Central source of truth for navigation groups and menu items.
-  - Exposes route metadata used by the sidebar, home page, and dynamic item pages.
+  - Exposes route metadata and permission requirements used by the sidebar, home page, and dynamic item pages.
 
 - `src/lib/utils.ts`
   - Shared utility helpers.

@@ -1,8 +1,7 @@
-import { notFound } from 'next/navigation';
 import { Clock3, FileText, FolderClosed, Sparkles } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { findNavigationItem } from '@/lib/navigation';
+import { requireNavigationItemAccess } from '@/lib/auth/authorization';
 
 type MenuItemPageProps = {
   params: Promise<{
@@ -13,12 +12,7 @@ type MenuItemPageProps = {
 
 export default async function MenuItemPage({ params }: MenuItemPageProps) {
   const { group: groupSlug, item: itemSlug } = await params;
-  const entry = findNavigationItem(groupSlug, itemSlug);
-
-  if (!entry) {
-    notFound();
-  }
-
+  const { entry } = await requireNavigationItemAccess(groupSlug, itemSlug);
   const { group, item } = entry;
 
   return (

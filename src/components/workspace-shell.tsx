@@ -10,6 +10,7 @@ import {
   FolderClosed,
   FolderOpen,
   LayoutGrid,
+  LogOut,
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
@@ -17,22 +18,34 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { logoutAction } from '@/lib/auth/actions';
+import type { AuthenticatedSession } from '@/lib/auth/types';
 import { cn } from '@/lib/utils';
-import { navigationGroups, navigationItemCount } from '@/lib/navigation';
+import type { NavigationGroup } from '@/lib/navigation';
 
 type WorkspaceShellProps = {
+  session: AuthenticatedSession;
+  navigationGroups: NavigationGroup[];
+  navigationItemCount: number;
   children: React.ReactNode;
 };
 
-const initialFolderState = Object.fromEntries(
-  navigationGroups.map((group) => [group.slug, true])
-) as Record<string, boolean>;
-
-export function WorkspaceShell({ children }: WorkspaceShellProps) {
+export function WorkspaceShell({
+  session,
+  navigationGroups,
+  navigationItemCount,
+  children,
+}: WorkspaceShellProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(true);
-  const [expandedFolders, setExpandedFolders] =
-    useState<Record<string, boolean>>(initialFolderState);
+  const [expandedFolders, setExpandedFolders] = useState<
+    Record<string, boolean>
+  >(
+    () =>
+      Object.fromEntries(
+        navigationGroups.map((group) => [group.slug, true])
+      ) as Record<string, boolean>
+  );
 
   function toggleFolder(folderSlug: string) {
     setExpandedFolders((current) => ({
@@ -74,6 +87,14 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
             </div>
 
             <div className="flex items-center gap-2">
+              <div className="hidden rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-right sm:block">
+                <p className="text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
+                  {session.organizationCode}
+                </p>
+                <p className="text-sm font-medium text-slate-900">
+                  {session.displayName}
+                </p>
+              </div>
               <Button variant="outline" className="gap-2">
                 <User />
                 <span className="hidden sm:inline">Profile</span>
@@ -82,6 +103,12 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
                 <Settings />
                 <span className="hidden sm:inline">Setting</span>
               </Button>
+              <form action={logoutAction}>
+                <Button type="submit" variant="outline" className="gap-2">
+                  <LogOut />
+                  <span className="hidden sm:inline">Sign out</span>
+                </Button>
+              </form>
             </div>
           </div>
         </header>
@@ -123,6 +150,11 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
               </div>
 
               <nav className="flex flex-1 flex-col gap-5 overflow-y-auto">
+                {navigationGroups.length === 0 ? (
+                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-slate-300">
+                    No menu items are available for this account.
+                  </div>
+                ) : null}
                 {navigationGroups.map((group) => {
                   const isExpanded = expandedFolders[group.slug];
 
