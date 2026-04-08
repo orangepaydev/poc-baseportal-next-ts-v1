@@ -96,6 +96,14 @@ App Router entry points, route files, and global styling.
   - Submits user group change requests and processes approval decisions.
   - Supports route-aware redirects for the list, detail, edit, and create pages.
 
+- `src/app/(workspace)/admin/audit-log/page.tsx`
+  - Audit Log search page.
+  - Renders the query panel with event type and resource type filters and paginated results.
+
+- `src/app/(workspace)/admin/audit-log/[eventId]/page.tsx`
+  - Audit Event detail page.
+  - Shows event metadata, actor context, linked approval request, and event data payload.
+
 - `src/app/(workspace)/admin/approval-request/page.tsx`
   - Approval Request search page.
   - Renders the query panel with status and resource type filters and paginated results.
@@ -165,6 +173,10 @@ Shared non-visual utilities and application metadata.
 - `src/lib/user-groups.ts`
   - Server-side user group workflow module.
   - Supports user group search, detail lookups, pending-request lookups, maker submissions, and checker decisions.
+
+- `src/lib/audit-events.ts`
+  - Server-side audit event query module.
+  - Supports paginated search with event type and resource type filtering, and single-record detail lookups.
 
 - `src/lib/approval-requests.ts`
   - Server-side approval request query module.
