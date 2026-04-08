@@ -161,10 +161,6 @@ export function createDatabaseManager(runtimeConfig = loadDatabaseConfig()) {
 export function getDatabaseManager() {
   const globalDatabaseState = globalThis as GlobalDatabaseState;
 
-  if (process.env.NODE_ENV === 'production') {
-    return createDatabaseManager();
-  }
-
   if (!globalDatabaseState.__databaseManager) {
     globalDatabaseState.__databaseManager = createDatabaseManager();
   }
