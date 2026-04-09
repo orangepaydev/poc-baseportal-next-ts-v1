@@ -13,6 +13,8 @@ import { db } from '@/lib/db';
 import { requireSession } from '@/lib/auth/session';
 import type { AuthenticatedSession, PermissionGrant } from '@/lib/auth/types';
 
+const OWNER_ORGANIZATION_CODE = 'owner';
+
 type PermissionGrantRow = {
   permission_code: string;
   permission_name: string;
@@ -48,8 +50,8 @@ function hasRequiredPermissions(
   );
 }
 
-function hasNavigationAccess(
-  permissionCodes: string[],
+function hasNavigationSessionAccess(
+  session: AuthenticatedSession,
   groupSlug: string,
   itemSlug: string
 ) {
@@ -57,6 +59,37 @@ function hasNavigationAccess(
 
   if (!entry) {
     return false;
+  }
+
+  if (
+    entry.item.access.ownerOrganizationOnly &&
+    session.organizationCode !== OWNER_ORGANIZATION_CODE
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function hasNavigationAccess(
+  permissionCodes: string[],
+  session: AuthenticatedSession,
+  groupSlug: string,
+  itemSlug: string,
+  bypassPermissionChecks = false
+) {
+  const entry = findNavigationItem(groupSlug, itemSlug);
+
+  if (!entry) {
+    return false;
+  }
+
+  if (!hasNavigationSessionAccess(session, groupSlug, itemSlug)) {
+    return false;
+  }
+
+  if (bypassPermissionChecks) {
+    return true;
   }
 
   return (
@@ -68,12 +101,22 @@ function hasNavigationAccess(
   );
 }
 
-function buildVisibleNavigationGroups(permissionCodes: string[]) {
+function buildVisibleNavigationGroups(
+  permissionCodes: string[],
+  session: AuthenticatedSession,
+  bypassPermissionChecks = false
+) {
   return navigationGroups
     .map((group) => ({
       ...group,
       items: group.items.filter((item) =>
-        hasNavigationAccess(permissionCodes, group.slug, item.slug)
+        hasNavigationAccess(
+          permissionCodes,
+          session,
+          group.slug,
+          item.slug,
+          bypassPermissionChecks
+        )
       ),
     }))
     .filter((group) => group.items.length > 0);
@@ -132,9 +175,11 @@ const loadAuthenticatedUserContext = cache(
     const permissionCodes = permissions.map(
       (permission) => permission.permissionCode
     );
-    const visibleNavigationGroups = isAdmin
-      ? navigationGroups
-      : buildVisibleNavigationGroups(permissionCodes);
+    const visibleNavigationGroups = buildVisibleNavigationGroups(
+      permissionCodes,
+      session,
+      isAdmin
+    );
 
     return {
       session,
@@ -169,8 +214,13 @@ export async function requireNavigationItemAccess(
 
   // Admin users bypass permission checks entirely.
   if (
-    context.session.userType !== 'ADMIN' &&
-    !hasNavigationAccess(context.permissionCodes, groupSlug, itemSlug)
+    !hasNavigationAccess(
+      context.permissionCodes,
+      context.session,
+      groupSlug,
+      itemSlug,
+      context.session.userType === 'ADMIN'
+    )
   ) {
     notFound();
   }

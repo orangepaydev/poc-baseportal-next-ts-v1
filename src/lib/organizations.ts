@@ -126,6 +126,7 @@ export type PendingOrganizationRequest = {
 };
 
 const ORGANIZATION_RESOURCE_TYPE = 'ORGANIZATION';
+const OWNER_ORGANIZATION_CODE = 'owner';
 const ORGANIZATION_FIELDS = [
   'organization_code',
   'organization_name',
@@ -374,6 +375,12 @@ function buildChangedFields(
 
 async function requirePermission(permissionCode: string) {
   const context = await getAuthenticatedUserContext();
+
+  if (context.session.organizationCode !== OWNER_ORGANIZATION_CODE) {
+    throw new Error(
+      'Only users in the Owner organization can access organization management.'
+    );
+  }
 
   if (
     context.session.userType !== 'ADMIN' &&

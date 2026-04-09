@@ -1,6 +1,7 @@
 export type NavigationAccess = {
   menuPermissionCode: string;
   requiredPermissionCodes?: string[];
+  ownerOrganizationOnly?: boolean;
 };
 
 export type NavigationItem = {
@@ -83,6 +84,7 @@ export const navigationGroups: NavigationGroup[] = [
         access: {
           menuPermissionCode: 'MENU_ADMIN_ORGANIZATION',
           requiredPermissionCodes: ['ORGANIZATION_READ'],
+          ownerOrganizationOnly: true,
         },
       },
       {

@@ -230,6 +230,7 @@ Shared non-visual utilities and application metadata.
   - Loads the authenticated user's effective permission grants through group membership.
   - Derives menu visibility metadata for the shell and landing page.
   - Enforces route-level workspace menu access.
+  - Also enforces session-scoped navigation rules such as Owner-organization-only admin pages.
 
 - `src/lib/email.ts`
   - Server-only SMTP email helper.
@@ -242,6 +243,7 @@ Shared non-visual utilities and application metadata.
 - `src/lib/navigation.ts`
   - Central source of truth for navigation groups and menu items.
   - Exposes route metadata and permission requirements used by the sidebar, home page, and dynamic item pages.
+  - Supports per-item access constraints beyond permission codes, including Owner-organization-only navigation entries.
 
 - `src/lib/user-groups.ts`
   - Server-side user group workflow module.
