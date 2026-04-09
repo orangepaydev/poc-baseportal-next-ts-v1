@@ -29,5 +29,15 @@ services:
       retries: 5
       start_period: 20s
 
+  smtpdev:
+    image: rnwood/smtp4dev:latest
+    container_name: portaldb-smtpdev
+    restart: unless-stopped
+    ports:
+      # Host apps should use EMAIL_SMTP_HOST=127.0.0.1 and EMAIL_SMTP_PORT=2525.
+      # Containers on the same Compose network can use smtpdev:25 directly.
+      - '2525:25'
+      - '3001:80'
+
 volumes:
   mariadb_data:

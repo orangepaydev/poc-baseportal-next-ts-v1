@@ -11,6 +11,12 @@ This document describes where the application source code lives and what each cu
 - Project configuration files live at the repository root.
 - Local development infrastructure files may also live at the repository root or under dedicated setup folders.
 
+## Documentation Set
+
+- `doc/services.md`
+  - Shared reference for infrastructure-facing service modules such as email and future integrations like LDAP, PKI, or crypto.
+  - Documents service purpose, configuration, usage patterns, and extension guidance for future agents.
+
 ## Local Infrastructure
 
 ### `docker-compose.yml`
@@ -20,8 +26,12 @@ Local Docker Compose entry point for infrastructure services.
 - `.env`
   - Local environment values for the app's default database connection.
 
+- `.env.example`
+  - Checked-in template for the local database, session, and SMTP settings.
+
 - `docker-compose.yml`
   - Starts a local MariaDB instance for development.
+  - Starts a local SMTP test service with a browser inbox.
   - Uses fixed local-development MariaDB container settings.
   - Mounts database initialization scripts from `docker-init/mariadb/init`.
 
@@ -215,6 +225,10 @@ Shared non-visual utilities and application metadata.
   - Loads the authenticated user's effective permission grants through group membership.
   - Derives menu visibility metadata for the shell and landing page.
   - Enforces route-level workspace menu access.
+
+- `src/lib/email.ts`
+  - Server-only SMTP email helper.
+  - Loads environment-based transport settings and sends outbound email through the configured server.
 
 - `src/lib/navigation.ts`
   - Central source of truth for navigation groups and menu items.

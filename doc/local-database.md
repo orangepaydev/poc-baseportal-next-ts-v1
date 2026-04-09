@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This project includes a local MariaDB setup for development via Docker Compose.
+This project includes local MariaDB and SMTP development services via Docker Compose.
 
 ## Files
 
@@ -11,6 +11,7 @@ This project includes a local MariaDB setup for development via Docker Compose.
 
 - `docker-compose.yml`
   - Starts a MariaDB container on port `3306`.
+  - Starts an SMTP test container on port `2525` with a web inbox on port `3001`.
   - Uses fixed local-development MariaDB container settings.
   - Mounts initialization assets from `docker-init/mariadb/init`.
 
@@ -28,9 +29,17 @@ This project includes a local MariaDB setup for development via Docker Compose.
 
 ## Usage
 
-- Start the database with `docker compose up -d` or `./dev-resource-start.sh`.
-- Stop it and remove the Compose-managed data volume with `docker compose down --volumes --remove-orphans` or `./dev-resource-shutdown.sh`.
+- Start the local services with `docker compose up -d` or `./dev-resource-start.sh`.
+- Stop them and remove the Compose-managed data volume with `docker compose down --volumes --remove-orphans` or `./dev-resource-shutdown.sh`.
 - Re-run initialization from scratch with `./dev-resource-shutdown.sh` and then `./dev-resource-start.sh`.
+
+## SMTP Service
+
+- The SMTP test service uses the `smtpdev` Compose service backed by the `rnwood/smtp4dev` image.
+- Send application email to `localhost:2525` during local development.
+- The root `.env.example` file includes matching SMTP settings for host-based local development.
+- If the app later runs inside the same Compose network, use `smtpdev:25` instead of the host-mapped port.
+- Open `http://localhost:3001` to inspect captured messages in the web UI.
 
 ## Notes
 
