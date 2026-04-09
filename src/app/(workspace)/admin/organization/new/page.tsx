@@ -75,6 +75,7 @@ export default async function NewOrganizationPage({
               name="organizationCode"
               type="text"
               placeholder="acme-corp"
+              required
               className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-normal text-slate-900 transition outline-none focus:border-cyan-500 focus:bg-white"
             />
           </label>
@@ -85,9 +86,56 @@ export default async function NewOrganizationPage({
               name="organizationName"
               type="text"
               placeholder="Acme Corporation"
+              required
               className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-normal text-slate-900 transition outline-none focus:border-cyan-500 focus:bg-white"
             />
           </label>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="space-y-2 text-sm font-medium text-slate-700">
+              <span>Admin User 1 Username</span>
+              <input
+                name="adminUser1Username"
+                type="text"
+                placeholder="admin.one"
+                required
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-normal text-slate-900 transition outline-none focus:border-cyan-500 focus:bg-white"
+              />
+            </label>
+
+            <label className="space-y-2 text-sm font-medium text-slate-700">
+              <span>Admin User 1 Email</span>
+              <input
+                name="adminUser1Email"
+                type="email"
+                placeholder="admin.one@example.com"
+                required
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-normal text-slate-900 transition outline-none focus:border-cyan-500 focus:bg-white"
+              />
+            </label>
+
+            <label className="space-y-2 text-sm font-medium text-slate-700">
+              <span>Admin User 2 Username</span>
+              <input
+                name="adminUser2Username"
+                type="text"
+                placeholder="admin.two"
+                required
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-normal text-slate-900 transition outline-none focus:border-cyan-500 focus:bg-white"
+              />
+            </label>
+
+            <label className="space-y-2 text-sm font-medium text-slate-700">
+              <span>Admin User 2 Email</span>
+              <input
+                name="adminUser2Email"
+                type="email"
+                placeholder="admin.two@example.com"
+                required
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-normal text-slate-900 transition outline-none focus:border-cyan-500 focus:bg-white"
+              />
+            </label>
+          </div>
 
           <div className="flex justify-end">
             <Button

@@ -2,6 +2,10 @@ import 'server-only';
 
 import { db } from '@/lib/db';
 import { getAuthenticatedUserContext } from '@/lib/auth/authorization';
+import {
+  applyApprovedOrganizationPatch,
+  revertRejectedCreateOrganizationPatch,
+} from '@/lib/organizations';
 
 type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 type ActionType = 'CREATE' | 'UPDATE' | 'DELETE' | 'ADD' | 'REMOVE';
@@ -441,6 +445,11 @@ async function revertRejectedCreate(
   resourceType: string,
   patch: ChangePatchPayload
 ) {
+  if (resourceType === 'ORGANIZATION') {
+    await revertRejectedCreateOrganizationPatch(patch);
+    return;
+  }
+
   if (resourceType === 'USER_GROUP' && patch.op === 'CREATE_USER_GROUP') {
     const values = patch.values as {
       organization_id: number;
@@ -464,6 +473,8 @@ async function applyApprovedPatch(
   patch: ChangePatchPayload
 ) {
   switch (resourceType) {
+    case 'ORGANIZATION':
+      return applyApprovedOrganizationPatch(patch);
     case 'USER_GROUP':
       return applyApprovedUserGroupPatch(patch);
     default:

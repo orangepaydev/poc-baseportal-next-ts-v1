@@ -1,7 +1,10 @@
 import 'server-only';
 
+import { createHash, randomBytes } from 'node:crypto';
+
 import { db } from '@/lib/db';
 import { getAuthenticatedUserContext } from '@/lib/auth/authorization';
+import { sendOrganizationAdminAccountCreatedEmail } from '@/lib/organization-admin-account-email';
 
 type OrganizationStatus = 'ACTIVE' | 'INACTIVE';
 type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
@@ -41,6 +44,18 @@ type OrganizationSnapshot = {
   organization_code: string;
   organization_name: string;
   status: OrganizationStatus;
+  admin_user_1_username?: string;
+  admin_user_1_email?: string;
+  admin_user_2_username?: string;
+  admin_user_2_email?: string;
+};
+
+type OrganizationAdminUser = {
+  username: string;
+  display_name: string;
+  email: string;
+  user_type: 'ADMIN';
+  status: 'ACTIVE';
 };
 
 type OrganizationChangedFields = Record<
@@ -57,6 +72,7 @@ type CreateOrganizationPatch = {
     organization_code: string;
     organization_name: string;
     status: OrganizationStatus;
+    admin_users: [OrganizationAdminUser, OrganizationAdminUser];
   };
 };
 
@@ -114,7 +130,12 @@ const ORGANIZATION_FIELDS = [
   'organization_code',
   'organization_name',
   'status',
+  'admin_user_1_username',
+  'admin_user_1_email',
+  'admin_user_2_username',
+  'admin_user_2_email',
 ] as const;
+const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function toNumber(value: unknown) {
   return Number(value ?? 0);
@@ -184,6 +205,87 @@ function validateStatus(status: string): OrganizationStatus {
   return status;
 }
 
+function validateUsername(username: string, label: string) {
+  const normalized = username.trim();
+
+  if (!/^[A-Za-z0-9_.-]{3,100}$/.test(normalized)) {
+    throw new Error(
+      `${label} must be 3 to 100 characters and use only letters, numbers, hyphens, underscores, or periods.`
+    );
+  }
+
+  return normalized;
+}
+
+function validateEmail(email: string, label: string) {
+  const normalized = email.trim();
+
+  if (!normalized) {
+    throw new Error(`${label} is required.`);
+  }
+
+  if (!EMAIL_FORMAT.test(normalized)) {
+    throw new Error(`${label} must be a valid email address.`);
+  }
+
+  return normalized;
+}
+
+function buildOrganizationAdminUser(input: {
+  username: string;
+  email: string;
+  usernameLabel: string;
+  emailLabel: string;
+}): OrganizationAdminUser {
+  const username = validateUsername(input.username, input.usernameLabel);
+
+  return {
+    username,
+    display_name: username,
+    email: validateEmail(input.email, input.emailLabel),
+    user_type: 'ADMIN',
+    status: 'ACTIVE',
+  };
+}
+
+function validateOrganizationAdminUsers(input: {
+  adminUser1Username: string;
+  adminUser1Email: string;
+  adminUser2Username: string;
+  adminUser2Email: string;
+}): [OrganizationAdminUser, OrganizationAdminUser] {
+  const adminUser1 = buildOrganizationAdminUser({
+    username: input.adminUser1Username,
+    email: input.adminUser1Email,
+    usernameLabel: 'Admin User 1 Username',
+    emailLabel: 'Admin User 1 Email',
+  });
+  const adminUser2 = buildOrganizationAdminUser({
+    username: input.adminUser2Username,
+    email: input.adminUser2Email,
+    usernameLabel: 'Admin User 2 Username',
+    emailLabel: 'Admin User 2 Email',
+  });
+
+  if (adminUser1.username === adminUser2.username) {
+    throw new Error('Admin user usernames must be different from each other.');
+  }
+
+  if (adminUser1.email.toLowerCase() === adminUser2.email.toLowerCase()) {
+    throw new Error('Admin user email addresses must be different from each other.');
+  }
+
+  return [adminUser1, adminUser2];
+}
+
+function createPasswordDigest(password: string) {
+  return createHash('sha256').update(password).digest('hex');
+}
+
+function createSecurePassword() {
+  return randomBytes(18).toString('base64url');
+}
+
 function buildOrganizationResourceKey(organizationCode: string) {
   return `ORG:${organizationCode}`;
 }
@@ -223,12 +325,27 @@ function buildSnapshot(org: {
   organizationCode: string;
   organizationName: string;
   status: OrganizationStatus;
+  adminUsers?: readonly OrganizationAdminUser[];
 }): OrganizationSnapshot {
+  const [adminUser1, adminUser2] = org.adminUsers ?? [];
+
   return {
     ...(org.id ? { id: org.id } : {}),
     organization_code: org.organizationCode,
     organization_name: org.organizationName,
     status: org.status,
+    ...(adminUser1
+      ? {
+          admin_user_1_username: adminUser1.username,
+          admin_user_1_email: adminUser1.email,
+        }
+      : {}),
+    ...(adminUser2
+      ? {
+          admin_user_2_username: adminUser2.username,
+          admin_user_2_email: adminUser2.email,
+        }
+      : {}),
   };
 }
 
@@ -294,14 +411,31 @@ async function findExistingOrganizationById(organizationId: number) {
 }
 
 async function findExistingOrganizationByCode(organizationCode: string) {
-  return db.queryOne<{ id: number | string }>(
+  return db.queryOne<{ id: number | string; status: OrganizationStatus }>(
     `
       select
-        id
+        id,
+        status
       from organizations
       where organization_code = ?
     `,
     [organizationCode]
+  );
+}
+
+async function findExistingUserByUsername(
+  organizationId: number,
+  username: string
+) {
+  return db.queryOne<{ id: number | string }>(
+    `
+      select
+        id
+      from users
+      where organization_id = ?
+        and username = ?
+    `,
+    [organizationId, username]
   );
 }
 
@@ -488,6 +622,7 @@ function buildCreatePatch(org: {
   organizationCode: string;
   organizationName: string;
   status: OrganizationStatus;
+  adminUsers: [OrganizationAdminUser, OrganizationAdminUser];
 }): CreateOrganizationPatch {
   return {
     op: 'CREATE_ORGANIZATION',
@@ -495,6 +630,7 @@ function buildCreatePatch(org: {
       organization_code: org.organizationCode,
       organization_name: org.organizationName,
       status: org.status,
+      admin_users: org.adminUsers,
     },
   };
 }
@@ -558,7 +694,28 @@ function ensureActionMatchesPatch(
 async function applyApprovedChange(patch: OrganizationChangePatch) {
   switch (patch.op) {
     case 'CREATE_ORGANIZATION': {
-      await db.execute(
+      const existingOrganization = await findExistingOrganizationByCode(
+        patch.values.organization_code
+      );
+
+      if (!existingOrganization) {
+        throw new Error('The organization placeholder no longer exists.');
+      }
+
+      if (existingOrganization.status !== 'INACTIVE') {
+        throw new Error(
+          'Only inactive organization placeholders can be approved.'
+        );
+      }
+
+      const adminUsers = validateOrganizationAdminUsers({
+        adminUser1Username: patch.values.admin_users[0]?.username ?? '',
+        adminUser1Email: patch.values.admin_users[0]?.email ?? '',
+        adminUser2Username: patch.values.admin_users[1]?.username ?? '',
+        adminUser2Email: patch.values.admin_users[1]?.email ?? '',
+      });
+      const organizationId = toNumber(existingOrganization.id);
+      const activateResult = await db.execute(
         `
           update organizations
           set organization_name = ?,
@@ -568,6 +725,99 @@ async function applyApprovedChange(patch: OrganizationChangePatch) {
         `,
         [patch.values.organization_name, patch.values.organization_code]
       );
+
+      if (activateResult.affectedRows !== 1) {
+        throw new Error('The organization could not be activated for approval.');
+      }
+
+      const generatedAdmins = adminUsers.map((adminUser) => ({
+        ...adminUser,
+        password: createSecurePassword(),
+      }));
+      const createdUsernames: string[] = [];
+
+      try {
+        for (const adminUser of generatedAdmins) {
+          const existingUser = await findExistingUserByUsername(
+            organizationId,
+            adminUser.username
+          );
+
+          if (existingUser) {
+            throw new Error(
+              `A user with username ${adminUser.username} already exists for this organization.`
+            );
+          }
+
+          await db.execute(
+            `
+              insert into users (
+                organization_id,
+                username,
+                display_name,
+                email,
+                password_sha256,
+                password_algo,
+                user_type,
+                status
+              )
+              values (?, ?, ?, ?, ?, 'SHA256', 'ADMIN', 'ACTIVE')
+            `,
+            [
+              organizationId,
+              adminUser.username,
+              adminUser.display_name,
+              adminUser.email,
+              createPasswordDigest(adminUser.password),
+            ]
+          );
+
+          createdUsernames.push(adminUser.username);
+        }
+
+        for (const adminUser of generatedAdmins) {
+          await sendOrganizationAdminAccountCreatedEmail({
+            organizationCode: patch.values.organization_code,
+            organizationName: patch.values.organization_name,
+            username: adminUser.username,
+            email: adminUser.email,
+            password: adminUser.password,
+          });
+        }
+      } catch (error) {
+        if (createdUsernames.length > 0) {
+          const placeholders = createdUsernames.map(() => '?').join(', ');
+
+          await db.execute(
+            `
+              delete from users
+              where organization_id = ?
+                and username in (${placeholders})
+            `,
+            [organizationId, ...createdUsernames]
+          );
+        }
+
+        await db.execute(
+          `
+            update organizations
+            set status = 'INACTIVE'
+            where id = ?
+          `,
+          [organizationId]
+        );
+
+        if (error instanceof Error && error.message) {
+          throw new Error(
+            `The organization approval could not be completed: ${error.message}`
+          );
+        }
+
+        throw new Error(
+          'The organization approval could not be completed.'
+        );
+      }
+
       return;
     }
     case 'UPDATE_ORGANIZATION': {
@@ -798,10 +1048,15 @@ export function buildOrganizationRouteResourceKey(organizationCode: string) {
 export async function submitCreateOrganizationRequest(input: {
   organizationCode: string;
   organizationName: string;
+  adminUser1Username: string;
+  adminUser1Email: string;
+  adminUser2Username: string;
+  adminUser2Email: string;
 }) {
   const context = await requirePermission('ORGANIZATION_WRITE');
   const organizationCode = validateOrganizationCode(input.organizationCode);
   const organizationName = validateOrganizationName(input.organizationName);
+  const adminUsers = validateOrganizationAdminUsers(input);
   const status: OrganizationStatus = 'ACTIVE';
   const resourceKey = buildOrganizationResourceKey(organizationCode);
 
@@ -817,6 +1072,7 @@ export async function submitCreateOrganizationRequest(input: {
     organizationCode,
     organizationName,
     status,
+    adminUsers,
   });
 
   await createApprovalRequest({
@@ -832,6 +1088,7 @@ export async function submitCreateOrganizationRequest(input: {
       organizationCode,
       organizationName,
       status,
+      adminUsers,
     }),
   });
 
@@ -1060,13 +1317,27 @@ export async function rejectOrganizationRequest(input: {
   const patch = parseChangePatch(request.change_patch);
 
   if (patch.op === 'CREATE_ORGANIZATION') {
-    await db.execute(
-      `
-        delete from organizations
-        where organization_code = ?
-          and status = 'INACTIVE'
-      `,
-      [patch.values.organization_code]
-    );
+    await revertRejectedCreateOrganizationPatch(patch);
   }
+}
+
+export async function applyApprovedOrganizationPatch(patch: unknown) {
+  await applyApprovedChange(parseChangePatch(patch));
+}
+
+export async function revertRejectedCreateOrganizationPatch(patch: unknown) {
+  const parsedPatch = parseChangePatch(patch);
+
+  if (parsedPatch.op !== 'CREATE_ORGANIZATION') {
+    return;
+  }
+
+  await db.execute(
+    `
+      delete from organizations
+      where organization_code = ?
+        and status = 'INACTIVE'
+    `,
+    [parsedPatch.values.organization_code]
+  );
 }

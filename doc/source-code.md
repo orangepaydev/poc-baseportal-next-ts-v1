@@ -230,6 +230,10 @@ Shared non-visual utilities and application metadata.
   - Server-only SMTP email helper.
   - Loads environment-based transport settings and sends outbound email through the configured server.
 
+- `src/lib/organization-admin-account-email.ts`
+  - Domain-specific email template and sender for organization-admin account provisioning.
+  - Builds the welcome message content used when a newly approved organization gets its initial admin users.
+
 - `src/lib/navigation.ts`
   - Central source of truth for navigation groups and menu items.
   - Exposes route metadata and permission requirements used by the sidebar, home page, and dynamic item pages.

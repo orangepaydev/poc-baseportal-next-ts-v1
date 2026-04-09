@@ -63,6 +63,10 @@ export async function createOrganizationRequestAction(formData: FormData) {
     await submitCreateOrganizationRequest({
       organizationCode: String(formData.get('organizationCode') ?? ''),
       organizationName: String(formData.get('organizationName') ?? ''),
+      adminUser1Username: String(formData.get('adminUser1Username') ?? ''),
+      adminUser1Email: String(formData.get('adminUser1Email') ?? ''),
+      adminUser2Username: String(formData.get('adminUser2Username') ?? ''),
+      adminUser2Email: String(formData.get('adminUser2Email') ?? ''),
     });
     succeeded = true;
   } catch (error) {

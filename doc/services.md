@@ -77,6 +77,7 @@ When adding a new service, document these items:
 ### Source Location
 
 - `src/lib/email.ts`
+- `src/lib/organization-admin-account-email.ts`
 
 ### Configuration
 
@@ -221,6 +222,7 @@ if (isEmailConfigured()) {
 - Prefer wrappers such as `sendApprovalRequestSubmittedEmail()` or `sendUserWelcomeEmail()` instead of scattering raw email construction across routes.
 - Keep transport configuration inside `src/lib/email.ts` so callers only supply message content.
 - If delivery becomes more complex later, preserve the current `sendEmail()` helper as the lowest-level SMTP boundary unless there is a strong reason to replace it.
+- Organization approval onboarding email now uses the wrapper in `src/lib/organization-admin-account-email.ts` so the template can be updated without changing approval workflow code.
 
 ### Error Handling Guidance
 
