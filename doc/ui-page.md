@@ -21,6 +21,10 @@ The agent should ask:
      - `UserGroupChecker` — `root1`, `root2`
    - Present these groups to the user and ask which ones should see the new menu item.
    - The **OwnerAdmin** group should always have access by default since it is the administrative group.
+3. **Should the `organizationId` filter be omitted?**
+   - By default, Query and View data access should be scoped by `organizationId` for the authenticated session.
+   - The agent should add the `organizationId` filter unless the user explicitly says the page must show cross-organization data.
+   - If the resource should not be organization-scoped, the agent should ask for confirmation before leaving the filter out.
 
 ## Reference Implementations
 
@@ -125,8 +129,9 @@ The Delete action uses a client component with a confirmation modal embedded in 
 Every generated page should follow these conventions from the User Group reference:
 
 1. **Permission check first** — call `requireNavigationItemAccess()` before loading data.
-2. **Pending request blocking** — disable Create, Edit, and Delete when a pending approval request exists for the resource.
-3. **Two-step submission** — forms submit to server actions that call library functions, then redirect.
-4. **Query param messaging** — pass success notices and errors as search params after redirect.
-5. **Back button** — View pages link back to Query; Edit, Create, and Approve pages link back to View or Query.
-6. **Conditional UI** — show or hide action buttons based on the user's permission codes and the resource state.
+2. **Organization scoping by default** — add the authenticated session `organizationId` to Query and View data access unless the user explicitly confirms the page should span multiple organizations.
+3. **Pending request blocking** — disable Create, Edit, and Delete when a pending approval request exists for the resource.
+4. **Two-step submission** — forms submit to server actions that call library functions, then redirect.
+5. **Query param messaging** — pass success notices and errors as search params after redirect.
+6. **Back button** — View pages link back to Query; Edit, Create, and Approve pages link back to View or Query.
+7. **Conditional UI** — show or hide action buttons based on the user's permission codes and the resource state.

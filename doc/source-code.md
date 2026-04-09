@@ -10,8 +10,13 @@ This document describes where the application source code lives and what each cu
 - Documentation lives under `doc/`.
 - Project configuration files live at the repository root.
 - Local development infrastructure files may also live at the repository root or under dedicated setup folders.
+- Admin Query and View data access should be scoped by the authenticated session `organizationId` by default unless a page is explicitly intended to span multiple organizations.
 
 ## Documentation Set
+
+- `doc/ui-page.md`
+  - Reference guide for generating CRUD UI pages from the User Group examples.
+  - States that Query and View data access should include the authenticated session `organizationId` by default unless the user explicitly asks for cross-organization behavior.
 
 - `doc/services.md`
   - Shared reference for infrastructure-facing service modules such as email and future integrations like LDAP, PKI, or crypto.
