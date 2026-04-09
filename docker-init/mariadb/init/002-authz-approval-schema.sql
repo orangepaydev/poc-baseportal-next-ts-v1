@@ -228,7 +228,6 @@ FROM (
   UNION ALL SELECT 'MENU_TRANSACTION_INVOICES', 'MENU_ITEM', 'MENU', 'transaction/invoices', 'Access Transaction Invoices', 'Shows the Transaction Invoices menu item.'
   UNION ALL SELECT 'MENU_TRANSACTION_PAYMENTS', 'MENU_ITEM', 'MENU', 'transaction/payments', 'Access Transaction Payments', 'Shows the Transaction Payments menu item.'
   UNION ALL SELECT 'MENU_ADMIN_USERS', 'MENU_ITEM', 'MENU', 'admin/users', 'Access Admin Users', 'Shows the Admin Users menu item.'
-  UNION ALL SELECT 'MENU_ADMIN_ROLES', 'MENU_ITEM', 'MENU', 'admin/roles', 'Access Admin Roles', 'Shows the Admin Roles menu item.'
   UNION ALL SELECT 'MENU_ADMIN_ORGANIZATION', 'MENU_ITEM', 'MENU', 'admin/organization', 'Access Admin Organization', 'Shows the Admin Organization menu item.'
   UNION ALL SELECT 'MENU_ADMIN_USER_GROUP', 'MENU_ITEM', 'MENU', 'admin/user-group', 'Access Admin User Group', 'Shows the Admin User Group menu item.'
   UNION ALL SELECT 'MENU_ADMIN_AUDIT_LOG', 'MENU_ITEM', 'MENU', 'admin/audit-log', 'Access Admin Audit Log', 'Shows the Admin Audit Log menu item.'

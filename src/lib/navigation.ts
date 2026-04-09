@@ -88,17 +88,6 @@ export const navigationGroups: NavigationGroup[] = [
         },
       },
       {
-        title: 'Roles',
-        slug: 'roles',
-        description:
-          'Placeholder view for role definitions, assignments, and policy checks.',
-        href: '/admin/roles',
-        access: {
-          menuPermissionCode: 'MENU_ADMIN_ROLES',
-          requiredPermissionCodes: ['USER_GROUP_READ'],
-        },
-      },
-      {
         title: 'User Group',
         slug: 'user-group',
         description:
