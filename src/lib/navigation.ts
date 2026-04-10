@@ -99,6 +99,17 @@ export const navigationGroups: NavigationGroup[] = [
         },
       },
       {
+        title: 'User Group Permission',
+        slug: 'user-group-permission',
+        description:
+          'Manage organisation-scoped user group permission assignments through maker-checker requests.',
+        href: '/admin/user-group-permission',
+        access: {
+          menuPermissionCode: 'MENU_ADMIN_USER_GROUP_PERMISSION',
+          requiredPermissionCodes: ['GROUP_PERMISSION_READ'],
+        },
+      },
+      {
         title: 'Approval Request',
         slug: 'approval-request',
         description:

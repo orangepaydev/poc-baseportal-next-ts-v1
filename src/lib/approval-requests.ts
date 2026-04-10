@@ -6,8 +6,9 @@ import {
   applyApprovedOrganizationPatch,
   revertRejectedCreateOrganizationPatch,
 } from '@/lib/organizations';
-import type { SystemPropertyChangePatch } from '@/lib/system-properties';
 import type { SystemCodeChangePatch } from '@/lib/system-codes';
+import type { SystemPropertyChangePatch } from '@/lib/system-properties';
+import type { UserGroupPermissionChangePatch } from '@/lib/user-group-permissions';
 
 type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 type ActionType = 'CREATE' | 'UPDATE' | 'DELETE' | 'ADD' | 'REMOVE';
@@ -593,6 +594,47 @@ async function applyApprovedSystemPropertyPatch(
   }
 }
 
+async function applyApprovedGroupPermissionPatch(
+  patch: UserGroupPermissionChangePatch
+) {
+  switch (patch.op) {
+    case 'UPDATE_GROUP_PERMISSIONS': {
+      for (const permissionId of patch.values.remove_permission_ids) {
+        await db.execute(
+          `
+            delete from user_group_permissions
+            where user_group_id = ?
+              and permission_id = ?
+          `,
+          [patch.target.user_group_id, permissionId]
+        );
+      }
+
+      for (const permissionId of patch.values.add_permission_ids) {
+        await db.execute(
+          `
+            insert ignore into user_group_permissions (
+              user_group_id,
+              permission_id
+            )
+            values (?, ?)
+          `,
+          [patch.target.user_group_id, permissionId]
+        );
+      }
+
+      return;
+    }
+    default: {
+      const unsupportedPatch = patch as { op?: unknown };
+
+      throw new Error(
+        `Unsupported group permission patch operation: ${String(unsupportedPatch.op)}`
+      );
+    }
+  }
+}
+
 async function revertRejectedCreate(
   resourceType: string,
   patch: ChangePatchPayload
@@ -646,6 +688,10 @@ async function applyApprovedPatch(
     case 'SYSTEM_PROPERTY':
       return applyApprovedSystemPropertyPatch(
         patch as SystemPropertyChangePatch
+      );
+    case 'GROUP_PERMISSION':
+      return applyApprovedGroupPermissionPatch(
+        patch as UserGroupPermissionChangePatch
       );
     case 'USER_GROUP':
       return applyApprovedUserGroupPatch(patch);

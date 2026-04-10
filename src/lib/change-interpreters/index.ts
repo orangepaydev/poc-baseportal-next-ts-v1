@@ -1,4 +1,5 @@
 import type { ChangeInterpreter, InterpretedChange } from './types';
+import { groupPermissionInterpreter } from './group-permission';
 import { organizationInterpreter } from './organization';
 import { systemPropertyInterpreter } from './system-property';
 import { systemCodeInterpreter } from './system-code';
@@ -8,6 +9,7 @@ import { userGroupInterpreter } from './user-group';
 export type { InterpretedChange, InterpretedFieldChange } from './types';
 
 const interpreters: Record<string, ChangeInterpreter> = {
+  GROUP_PERMISSION: groupPermissionInterpreter,
   ORGANIZATION: organizationInterpreter,
   SYSTEM_PROPERTY: systemPropertyInterpreter,
   SYSTEM_CODE: systemCodeInterpreter,
