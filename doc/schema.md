@@ -56,6 +56,7 @@ Approved user records.
 - Belongs to one organization.
 - Login key is `(organization_id, username)`.
 - `password_sha256` stores the password digest.
+- `password_reset_required` forces a password change after the next successful login when set to `1`.
 - `status` supports active, locked, and disabled states.
 
 ### user_groups

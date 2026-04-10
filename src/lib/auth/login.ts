@@ -22,6 +22,7 @@ type UserLoginRow = {
   display_name: string;
   password_sha256: string;
   password_algo: string;
+  password_reset_required: number;
   user_type: 'ADMIN' | 'NORMAL';
 };
 
@@ -108,6 +109,7 @@ export async function authenticateUser({
         user.display_name,
         user.password_sha256,
         user.password_algo,
+        user.password_reset_required,
         user.user_type
       from users user
       where user.organization_id = ?
@@ -172,6 +174,7 @@ export async function authenticateUser({
     organizationCode: organization.organization_code,
     username: user.username,
     displayName: user.display_name,
+    passwordResetRequired: user.password_reset_required === 1,
     userType: user.user_type,
     issuedAt: new Date().toISOString(),
   };

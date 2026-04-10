@@ -7,6 +7,7 @@ export type AuthenticatedSession = {
   organizationCode: string;
   username: string;
   displayName: string;
+  passwordResetRequired: boolean;
   userType: UserType;
   issuedAt: string;
 };

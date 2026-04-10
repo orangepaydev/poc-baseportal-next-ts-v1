@@ -19,6 +19,7 @@ CREATE TABLE users (
   email VARCHAR(255) NULL,
   password_sha256 CHAR(64) NOT NULL,
   password_algo VARCHAR(32) NOT NULL DEFAULT 'SHA256',
+  password_reset_required TINYINT(1) NOT NULL DEFAULT 0,
   user_type ENUM('ADMIN', 'NORMAL') NOT NULL DEFAULT 'NORMAL',
   status ENUM('ACTIVE', 'LOCKED', 'DISABLED') NOT NULL DEFAULT 'ACTIVE',
   last_login_at DATETIME NULL,

@@ -32,9 +32,17 @@ This document describes the current login and session model for the workspace.
   - `userId`
   - `username`
   - `displayName`
+  - `passwordResetRequired`
   - `issuedAt`
 - The session payload is signed with an HMAC so the app can reject tampered cookies.
 - The cookie is intended to be the base for later authorization work.
+
+## Forced Password Change
+
+- Approved user-create and approved password-reset flows set `users.password_reset_required = 1`.
+- A successful login still creates a session, but sessions with `passwordResetRequired = true` are redirected to `/change-password` instead of the workspace.
+- Normal protected routes reject sessions with `passwordResetRequired = true` and send the user to the password-change screen.
+- The password-change form updates `users.password_sha256`, clears `users.password_reset_required`, writes an audit event, clears the session cookie, and returns the user to `/login`.
 
 ## Authorization Helper
 
@@ -65,6 +73,7 @@ This document describes the current login and session model for the workspace.
 ## Routing Model
 
 - `src/app/(auth)/login/page.tsx` renders the login screen outside the workspace shell.
+- `src/app/(auth)/change-password/page.tsx` renders the forced password-change screen for flagged sessions.
 - `src/app/(workspace)/layout.tsx` requires a valid session before rendering the shell.
 - `src/app/(workspace)/page.tsx` is the protected landing page.
 - `src/app/(workspace)/[group]/[item]/page.tsx` contains the protected menu placeholder pages.

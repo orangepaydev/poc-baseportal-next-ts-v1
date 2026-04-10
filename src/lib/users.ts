@@ -3,6 +3,7 @@ import 'server-only';
 import { createHash, randomBytes } from 'node:crypto';
 
 import { getAuthenticatedUserContext } from '@/lib/auth/authorization';
+import { requireSession } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import { sendUserAccountCreatedEmail } from '@/lib/user-account-email';
 import { sendUserPasswordResetEmail } from '@/lib/user-password-reset-email';
@@ -26,6 +27,7 @@ type UserListRow = {
 type ExistingUserRow = UserListRow & {
   organization_id: number | string;
   password_sha256: string;
+  password_reset_required: number;
 };
 
 type ExistingOrganizationRow = {
@@ -276,6 +278,25 @@ function createSecurePassword() {
   return randomBytes(18).toString('base64url');
 }
 
+function validateReplacementPassword(
+  newPassword: string,
+  confirmPassword: string
+) {
+  if (newPassword !== confirmPassword) {
+    throw new Error('The new password and confirmation must match.');
+  }
+
+  if (newPassword.length < 12 || newPassword.length > 200) {
+    throw new Error('The new password must be between 12 and 200 characters.');
+  }
+
+  if (!/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+    throw new Error('The new password must contain at least one letter and one number.');
+  }
+
+  return newPassword;
+}
+
 function buildUserResourceKey(organizationCode: string, username: string) {
   return `ORG:${organizationCode}:USER:${username}`;
 }
@@ -374,6 +395,7 @@ async function findExistingUserById(organizationId: number, userId: number) {
         u.display_name,
         u.email,
         u.password_sha256,
+        u.password_reset_required,
         u.user_type,
         u.status,
         u.last_login_at,
@@ -390,11 +412,17 @@ async function findExistingUserByUsername(
   organizationId: number,
   username: string
 ) {
-  return db.queryOne<{ id: number | string; password_sha256: string; status: UserStatus }>(
+  return db.queryOne<{
+    id: number | string;
+    password_sha256: string;
+    password_reset_required: number;
+    status: UserStatus;
+  }>(
     `
       select
         id,
         password_sha256,
+        password_reset_required,
         status
       from users
       where organization_id = ?
@@ -732,6 +760,7 @@ async function applyApprovedChange(patch: UserChangePatch) {
               email = ?,
               user_type = ?,
               password_sha256 = ?,
+              password_reset_required = 1,
               status = 'ACTIVE'
           where organization_id = ?
             and username = ?
@@ -764,6 +793,7 @@ async function applyApprovedChange(patch: UserChangePatch) {
           `
             update users
             set password_sha256 = ?,
+                password_reset_required = 0,
                 status = 'DISABLED'
             where organization_id = ?
               and username = ?
@@ -847,7 +877,8 @@ async function applyApprovedChange(patch: UserChangePatch) {
       await db.execute(
         `
           update users
-          set password_sha256 = ?
+          set password_sha256 = ?,
+              password_reset_required = 1
           where id = ?
             and organization_id = ?
         `,
@@ -870,12 +901,14 @@ async function applyApprovedChange(patch: UserChangePatch) {
         await db.execute(
           `
             update users
-            set password_sha256 = ?
+            set password_sha256 = ?,
+                password_reset_required = ?
             where id = ?
               and organization_id = ?
           `,
           [
             existingUser.password_sha256,
+              existingUser.password_reset_required,
             patch.target.id,
             patch.target.organization_id,
           ]
@@ -1177,10 +1210,11 @@ export async function submitCreateUserRequest(input: {
         email,
         password_sha256,
         password_algo,
+        password_reset_required,
         user_type,
         status
       )
-      values (?, ?, ?, ?, ?, 'SHA256', ?, 'DISABLED')
+      values (?, ?, ?, ?, ?, 'SHA256', 0, ?, 'DISABLED')
     `,
     [
       context.session.organizationId,
@@ -1521,5 +1555,72 @@ export async function revertRejectedCreateUserPatch(patch: unknown) {
         and status = 'DISABLED'
     `,
     [parsedPatch.values.organization_id, parsedPatch.values.username]
+  );
+}
+
+export async function completePasswordResetForCurrentUser(input: {
+  newPassword: string;
+  confirmPassword: string;
+}) {
+  const session = await requireSession({ allowPasswordResetRequired: true });
+
+  if (!session.passwordResetRequired) {
+    throw new Error('A forced password change is not required for this session.');
+  }
+
+  const user = await findExistingUserById(session.organizationId, session.userId);
+
+  if (!user || user.status !== 'ACTIVE') {
+    throw new Error('The current user account is not available for password change.');
+  }
+
+  if (user.password_reset_required !== 1) {
+    throw new Error('The password reset requirement is no longer active for this account.');
+  }
+
+  const newPassword = validateReplacementPassword(
+    input.newPassword,
+    input.confirmPassword
+  );
+  const newPasswordDigest = createPasswordDigest(newPassword);
+
+  if (newPasswordDigest === user.password_sha256) {
+    throw new Error('The new password must be different from the current password.');
+  }
+
+  await db.execute(
+    `
+      update users
+      set password_sha256 = ?,
+          password_reset_required = 0
+      where id = ?
+        and organization_id = ?
+        and status = 'ACTIVE'
+    `,
+    [newPasswordDigest, session.userId, session.organizationId]
+  );
+
+  await db.execute(
+    `
+      insert into audit_events (
+        organization_id,
+        actor_user_id,
+        event_type,
+        resource_type,
+        resource_key,
+        event_data
+      )
+      values (?, ?, 'USER_PASSWORD_CHANGED', ?, ?, ?)
+    `,
+    [
+      session.organizationId,
+      session.userId,
+      USER_RESOURCE_TYPE,
+      buildUserResourceKey(session.organizationCode, user.username),
+      JSON.stringify({
+        initiated_by: 'SELF_SERVICE',
+        session_id: session.sessionId,
+      }),
+    ]
   );
 }

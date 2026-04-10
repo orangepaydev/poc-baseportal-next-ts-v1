@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { recordLoginAuditEvent } from '@/lib/auth/audit';
 import { authenticateUser } from '@/lib/auth/login';
 import { clearSessionCookie, setSessionCookie } from '@/lib/auth/session';
+import { completePasswordResetForCurrentUser } from '@/lib/users';
 
 function getRequestIpAddress(headerList: Headers) {
   const forwardedFor = headerList.get('x-forwarded-for');
@@ -63,10 +64,31 @@ export async function loginAction(formData: FormData) {
   }
 
   await setSessionCookie(result.session);
-  redirect('/');
+  redirect(result.session.passwordResetRequired ? '/change-password' : '/');
 }
 
 export async function logoutAction() {
   await clearSessionCookie();
   redirect('/login');
+}
+
+export async function completePasswordResetAction(formData: FormData) {
+  try {
+    await completePasswordResetForCurrentUser({
+      newPassword: String(formData.get('newPassword') ?? ''),
+      confirmPassword: String(formData.get('confirmPassword') ?? ''),
+    });
+  } catch (error) {
+    const params = new URLSearchParams({
+      error:
+        error instanceof Error && error.message
+          ? error.message
+          : 'The password change could not be completed.',
+    });
+
+    redirect(`/change-password?${params.toString()}`);
+  }
+
+  await clearSessionCookie();
+  redirect('/login?notice=password-changed');
 }

@@ -62,6 +62,14 @@ function decodeSession(cookieValue: string) {
       return null;
     }
 
+    if (decoded.passwordResetRequired === undefined) {
+      decoded.passwordResetRequired = false;
+    }
+
+    if (typeof decoded.passwordResetRequired !== 'boolean') {
+      return null;
+    }
+
     // Default for sessions created before user_type was added.
     if (!decoded.userType) {
       decoded.userType = 'NORMAL';
@@ -102,11 +110,17 @@ export async function readSession() {
   return decodeSession(cookieValue);
 }
 
-export async function requireSession() {
+export async function requireSession(options?: {
+  allowPasswordResetRequired?: boolean;
+}) {
   const session = await readSession();
 
   if (!session) {
     redirect('/login');
+  }
+
+  if (session.passwordResetRequired && !options?.allowPasswordResetRequired) {
+    redirect('/change-password');
   }
 
   return session;

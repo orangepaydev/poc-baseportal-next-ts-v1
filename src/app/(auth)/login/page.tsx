@@ -8,6 +8,7 @@ import { readSession } from '@/lib/auth/session';
 type LoginPageProps = {
   searchParams: Promise<{
     error?: string;
+    notice?: string;
     organization?: string;
     username?: string;
   }>;
@@ -24,15 +25,25 @@ function getErrorMessage(error?: string) {
   }
 }
 
+function getNoticeMessage(notice?: string) {
+  switch (notice) {
+    case 'password-changed':
+      return 'Your password has been changed. Sign in again with the new password.';
+    default:
+      return null;
+  }
+}
+
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const session = await readSession();
 
   if (session) {
-    redirect('/');
+    redirect(session.passwordResetRequired ? '/change-password' : '/');
   }
 
   const params = await searchParams;
   const errorMessage = getErrorMessage(params.error);
+  const noticeMessage = getNoticeMessage(params.notice);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(14,116,144,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(15,23,42,0.18),transparent_32%),linear-gradient(180deg,#f8fafc_0%,#e2e8f0_100%)] px-4 py-6 text-slate-900 sm:px-6 lg:px-10 lg:py-10">
@@ -110,6 +121,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                     id="organizationCode"
                     name="organizationCode"
                     type="text"
+                    defaultValue={params.organization ?? ''}
                     className="w-full border-0 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
                   />
                 </div>
@@ -128,6 +140,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                     id="username"
                     name="username"
                     type="text"
+                    defaultValue={params.username ?? ''}
                     className="w-full border-0 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
                   />
                 </div>
@@ -152,6 +165,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   />
                 </div>
               </div>
+
+              {noticeMessage ? (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  {noticeMessage}
+                </div>
+              ) : null}
 
               {errorMessage ? (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">

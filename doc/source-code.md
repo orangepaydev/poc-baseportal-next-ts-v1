@@ -77,9 +77,14 @@ App Router entry points, route files, and global styling.
   - Login page rendered outside the workspace shell.
   - Submits tenant-aware credentials for organization, user, and password.
 
+- `src/app/(auth)/change-password/page.tsx`
+  - Forced password-change page rendered outside the workspace shell.
+  - Completes the post-login password rotation for sessions flagged with `passwordResetRequired`.
+
 - `src/app/(workspace)/layout.tsx`
   - Protected workspace layout.
   - Requires a valid session cookie before rendering the shared workspace shell.
+  - Redirects flagged password-reset sessions away from the workspace until the password is changed.
 
 - `src/app/(workspace)/page.tsx`
   - Protected home page.
