@@ -263,7 +263,7 @@ async function listAssignedMembers(organizationId: number, userGroupId: number) 
         on user.id = membership.user_id
       where membership.user_group_id = ?
         and user.organization_id = ?
-      order by user.username asc
+      order by user.username asc, user.id desc
     `,
     [userGroupId, organizationId]
   );
@@ -288,7 +288,7 @@ async function listUnassignedUsers(organizationId: number, userGroupId: number) 
           from user_group_memberships membership
           where membership.user_group_id = ?
         )
-      order by user.username asc
+      order by user.username asc, user.id desc
     `,
     [organizationId, userGroupId]
   );
@@ -571,7 +571,7 @@ export async function searchApprovedUserGroupMembershipTargetsPage(input: {
         user_group.description,
         user_group.status,
         user_group.updated_at
-      order by user_group.group_name asc
+      order by user_group.group_name asc, user_group.id desc
       limit ? offset ?
     `,
     [input.organizationId, likeQuery, likeQuery, pageSize, offset]
@@ -634,7 +634,7 @@ export async function listPendingUserGroupMembershipRequests(
       where approval_request.organization_id = ?
         and approval_request.resource_type = ?
         and approval_request.status = 'PENDING'
-      order by approval_request.submitted_at desc
+      order by approval_request.submitted_at desc, approval_request.id desc
     `,
     [organizationId, GROUP_MEMBERSHIP_RESOURCE_TYPE]
   );

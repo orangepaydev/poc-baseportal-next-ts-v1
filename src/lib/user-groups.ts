@@ -851,7 +851,7 @@ export async function searchApprovedUserGroupsPage(input: {
         user_group.description,
         user_group.status,
         user_group.updated_at
-      order by user_group.group_name asc
+      order by user_group.group_name asc, user_group.id desc
       limit ? offset ?
     `,
     [input.organizationId, likeQuery, likeQuery, pageSize, offset]
@@ -897,7 +897,7 @@ export async function searchApprovedUserGroups(
         user_group.description,
         user_group.status,
         user_group.updated_at
-      order by user_group.group_name asc
+      order by user_group.group_name asc, user_group.id desc
     `,
     [organizationId, likeQuery, likeQuery]
   );
@@ -941,7 +941,7 @@ export async function listPendingUserGroupRequests(organizationId: number) {
       where approval_request.organization_id = ?
         and approval_request.resource_type = ?
         and approval_request.status = 'PENDING'
-      order by approval_request.submitted_at desc
+      order by approval_request.submitted_at desc, approval_request.id desc
     `,
     [organizationId, USER_GROUP_RESOURCE_TYPE]
   );
@@ -987,7 +987,8 @@ export async function listUserGroupApprovalRequests(
         and approval_request.resource_type = ?
       order by
         case when approval_request.status = 'PENDING' then 0 else 1 end,
-        approval_request.submitted_at desc
+        approval_request.submitted_at desc,
+        approval_request.id desc
       limit ?
     `,
     [organizationId, USER_GROUP_RESOURCE_TYPE, limit]

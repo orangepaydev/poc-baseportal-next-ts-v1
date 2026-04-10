@@ -1,6 +1,11 @@
 import Link from 'next/link';
 import { Plus, Search } from 'lucide-react';
 
+import {
+  SortableQueryTable,
+  type SortableQueryTableColumn,
+  type SortableQueryTableRow,
+} from '@/components/sortable-query-table';
 import { Button } from '@/components/ui/button';
 import { requireNavigationItemAccess } from '@/lib/auth/authorization';
 import {
@@ -19,6 +24,13 @@ type UsersPageProps = {
 };
 
 const PAGE_SIZE = 10;
+
+const USER_TABLE_COLUMNS: readonly SortableQueryTableColumn[] = [
+  { key: 'id', label: 'ID' },
+  { key: 'name', label: 'Name' },
+  { key: 'status', label: 'Status' },
+  { key: 'approvalRequest', label: 'Approval Request' },
+];
 
 function buildPageHref(searchQuery: string, page: number) {
   const params = new URLSearchParams();
@@ -59,6 +71,49 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
   const pendingRequestByResourceKey = new Map(
     pendingRequests.map((request) => [request.resourceKey, request])
   );
+  const userRows: SortableQueryTableRow[] = users.map((user) => {
+    const resourceKey = buildUserRouteResourceKey(
+      session.organizationCode,
+      user.username
+    );
+    const pendingRequest = pendingRequestByResourceKey.get(resourceKey);
+    const approvalLabel = pendingRequest
+      ? pendingRequest.actionType === 'CREATE'
+        ? 'Pending create approval'
+        : pendingRequest.actionType === 'UPDATE'
+          ? 'Pending edit approval'
+          : 'Pending delete approval'
+      : 'No approval';
+
+    return {
+      id: user.id,
+      cells: {
+        id: {
+          kind: 'link',
+          href: `/admin/users/${user.id}`,
+          primary: String(user.id),
+          sortValue: user.id,
+        },
+        name: {
+          kind: 'text',
+          primary: user.displayName,
+          secondary: user.username,
+          sortValue: user.displayName,
+        },
+        status: {
+          kind: 'badge',
+          primary: user.status,
+          sortValue: user.status,
+        },
+        approvalRequest: {
+          kind: 'badge',
+          primary: approvalLabel,
+          sortValue: approvalLabel,
+          tone: pendingRequest ? 'warning' : 'success',
+        },
+      },
+    };
+  });
 
   return (
     <div className="grid gap-4">
@@ -142,94 +197,11 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
         </div>
 
         <div className="mt-6 overflow-hidden rounded-[24px] border border-slate-200">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    ID
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    Name
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    Approval Request
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 bg-white">
-                {users.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="px-4 py-8 text-center text-sm text-slate-500"
-                    >
-                      No users matched the current query.
-                    </td>
-                  </tr>
-                ) : null}
-
-                {users.map((user) => {
-                  const resourceKey = buildUserRouteResourceKey(
-                    session.organizationCode,
-                    user.username
-                  );
-                  const pendingRequest =
-                    pendingRequestByResourceKey.get(resourceKey);
-
-                  return (
-                    <tr key={user.id} className="align-top">
-                      <td className="px-4 py-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-xl"
-                          asChild
-                        >
-                          <Link href={`/admin/users/${user.id}`}>
-                            {user.id}
-                          </Link>
-                        </Button>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div>
-                          <p className="font-medium text-slate-900">
-                            {user.displayName}
-                          </p>
-                          <p className="mt-1 text-sm text-slate-500">
-                            {user.username}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                          {user.status}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        {pendingRequest ? (
-                          <div className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                            {pendingRequest.actionType === 'CREATE'
-                              ? 'Pending create approval'
-                              : pendingRequest.actionType === 'UPDATE'
-                                ? 'Pending edit approval'
-                                : 'Pending delete approval'}
-                          </div>
-                        ) : (
-                          <div className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                            No approval
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <SortableQueryTable
+            columns={USER_TABLE_COLUMNS}
+            rows={userRows}
+            emptyMessage="No users matched the current query."
+          />
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2 px-5 py-5">

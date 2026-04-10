@@ -1,6 +1,11 @@
 import Link from 'next/link';
 import { Plus, Search } from 'lucide-react';
 
+import {
+  SortableQueryTable,
+  type SortableQueryTableColumn,
+  type SortableQueryTableRow,
+} from '@/components/sortable-query-table';
 import { Button } from '@/components/ui/button';
 import { requireNavigationItemAccess } from '@/lib/auth/authorization';
 import { searchApprovedSystemPropertiesPage } from '@/lib/system-properties';
@@ -15,6 +20,13 @@ type SystemPropertyPageProps = {
 };
 
 const PAGE_SIZE = 10;
+
+const SYSTEM_PROPERTY_TABLE_COLUMNS: readonly SortableQueryTableColumn[] = [
+  { key: 'id', label: 'ID' },
+  { key: 'systemProperty', label: 'System Property' },
+  { key: 'values', label: 'Values', align: 'right' },
+  { key: 'updatedAt', label: 'Updated' },
+];
 
 function buildPageHref(searchQuery: string, page: number) {
   const params = new URLSearchParams();
@@ -59,6 +71,36 @@ export default async function SystemPropertyPage({
   });
   const { rows: systemProperties, totalCount, page, pageSize } = result;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const systemPropertyRows: SortableQueryTableRow[] = systemProperties.map(
+    (systemProperty) => ({
+      id: systemProperty.id,
+      cells: {
+        id: {
+          kind: 'link',
+          href: `/admin/system-property/${systemProperty.id}`,
+          primary: String(systemProperty.id),
+          sortValue: systemProperty.id,
+        },
+        systemProperty: {
+          kind: 'text',
+          primary: systemProperty.propertyCode,
+          secondary: systemProperty.description,
+          sortValue: systemProperty.propertyCode,
+        },
+        values: {
+          kind: 'text',
+          primary: String(systemProperty.valueCount),
+          sortValue: systemProperty.valueCount,
+          align: 'right',
+        },
+        updatedAt: {
+          kind: 'text',
+          primary: formatDate(systemProperty.updatedAt),
+          sortValue: new Date(systemProperty.updatedAt).getTime(),
+        },
+      },
+    })
+  );
 
   return (
     <div className="grid gap-4">
@@ -145,71 +187,11 @@ export default async function SystemPropertyPage({
         </div>
 
         <div className="mt-6 overflow-hidden rounded-[24px] border border-slate-200">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    ID
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    System Property
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    Values
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    Updated
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 bg-white">
-                {systemProperties.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="px-4 py-8 text-center text-sm text-slate-500"
-                    >
-                      No System Properties matched the current query.
-                    </td>
-                  </tr>
-                ) : null}
-
-                {systemProperties.map((systemProperty) => (
-                  <tr key={systemProperty.id} className="align-top">
-                    <td className="px-4 py-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-xl"
-                        asChild
-                      >
-                        <Link href={`/admin/system-property/${systemProperty.id}`}>
-                          {systemProperty.id}
-                        </Link>
-                      </Button>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div>
-                        <p className="font-medium text-slate-900">
-                          {systemProperty.propertyCode}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-500">
-                          {systemProperty.description}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-slate-600">
-                      {systemProperty.valueCount}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-slate-600">
-                      {formatDate(systemProperty.updatedAt)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <SortableQueryTable
+            columns={SYSTEM_PROPERTY_TABLE_COLUMNS}
+            rows={systemPropertyRows}
+            emptyMessage="No System Properties matched the current query."
+          />
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2 px-5 py-5">

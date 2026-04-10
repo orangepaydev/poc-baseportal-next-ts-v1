@@ -1,6 +1,11 @@
 import Link from 'next/link';
 import { Plus, Search } from 'lucide-react';
 
+import {
+  SortableQueryTable,
+  type SortableQueryTableColumn,
+  type SortableQueryTableRow,
+} from '@/components/sortable-query-table';
 import { Button } from '@/components/ui/button';
 import { requireNavigationItemAccess } from '@/lib/auth/authorization';
 import {
@@ -19,6 +24,14 @@ type SystemCodePageProps = {
 };
 
 const PAGE_SIZE = 10;
+
+const SYSTEM_CODE_TABLE_COLUMNS: readonly SortableQueryTableColumn[] = [
+  { key: 'id', label: 'ID' },
+  { key: 'systemCode', label: 'System Code' },
+  { key: 'status', label: 'Status' },
+  { key: 'values', label: 'Values', align: 'right' },
+  { key: 'approvalRequest', label: 'Approval Request' },
+];
 
 function buildPageHref(searchQuery: string, page: number) {
   const params = new URLSearchParams();
@@ -60,6 +73,51 @@ export default async function SystemCodePage({
   const pendingRequestByResourceKey = new Map(
     pendingRequests.map((request) => [request.resourceKey, request])
   );
+  const systemCodeRows: SortableQueryTableRow[] = systemCodes.map((systemCode) => {
+    const pendingRequest = pendingRequestByResourceKey.get(
+      buildSystemCodeRouteResourceKey(systemCode.systemCode)
+    );
+    const approvalLabel = pendingRequest
+      ? pendingRequest.actionType === 'CREATE'
+        ? 'Pending create approval'
+        : 'Pending edit approval'
+      : 'No approval';
+
+    return {
+      id: systemCode.id,
+      cells: {
+        id: {
+          kind: 'link',
+          href: `/admin/system-code/${systemCode.id}`,
+          primary: String(systemCode.id),
+          sortValue: systemCode.id,
+        },
+        systemCode: {
+          kind: 'text',
+          primary: systemCode.systemCode,
+          secondary: systemCode.description,
+          sortValue: systemCode.systemCode,
+        },
+        status: {
+          kind: 'badge',
+          primary: systemCode.status,
+          sortValue: systemCode.status,
+        },
+        values: {
+          kind: 'text',
+          primary: String(systemCode.valueCount),
+          sortValue: systemCode.valueCount,
+          align: 'right',
+        },
+        approvalRequest: {
+          kind: 'badge',
+          primary: approvalLabel,
+          sortValue: approvalLabel,
+          tone: pendingRequest ? 'warning' : 'success',
+        },
+      },
+    };
+  });
 
   return (
     <div className="grid gap-4">
@@ -146,95 +204,11 @@ export default async function SystemCodePage({
         </div>
 
         <div className="mt-6 overflow-hidden rounded-[24px] border border-slate-200">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    ID
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    System Code
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    Values
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    Approval Request
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 bg-white">
-                {systemCodes.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="px-4 py-8 text-center text-sm text-slate-500"
-                    >
-                      No System Codes matched the current query.
-                    </td>
-                  </tr>
-                ) : null}
-
-                {systemCodes.map((systemCode) => {
-                  const pendingRequest = pendingRequestByResourceKey.get(
-                    buildSystemCodeRouteResourceKey(systemCode.systemCode)
-                  );
-
-                  return (
-                    <tr key={systemCode.id} className="align-top">
-                      <td className="px-4 py-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-xl"
-                          asChild
-                        >
-                          <Link href={`/admin/system-code/${systemCode.id}`}>
-                            {systemCode.id}
-                          </Link>
-                        </Button>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div>
-                          <p className="font-medium text-slate-900">
-                            {systemCode.systemCode}
-                          </p>
-                          <p className="mt-1 text-sm text-slate-500">
-                            {systemCode.description}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                          {systemCode.status}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-sm text-slate-600">
-                        {systemCode.valueCount}
-                      </td>
-                      <td className="px-4 py-4">
-                        {pendingRequest ? (
-                          <div className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                            {pendingRequest.actionType === 'CREATE'
-                              ? 'Pending create approval'
-                              : 'Pending edit approval'}
-                          </div>
-                        ) : (
-                          <div className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                            No approval
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <SortableQueryTable
+            columns={SYSTEM_CODE_TABLE_COLUMNS}
+            rows={systemCodeRows}
+            emptyMessage="No System Codes matched the current query."
+          />
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2 px-5 py-5">

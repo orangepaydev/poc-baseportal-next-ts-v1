@@ -411,7 +411,7 @@ async function findSystemPropertyValues(systemPropertyId: number) {
         spc.updated_at
       from system_property_codes spc
       where spc.system_property_id = ?
-      order by spc.property_item_code asc
+      order by spc.property_item_code asc, spc.id desc
     `,
     [systemPropertyId]
   );
@@ -624,7 +624,7 @@ export async function searchApprovedSystemPropertiesPage(input: {
         sp.property_code,
         sp.description,
         sp.updated_at
-      order by sp.property_code asc
+      order by sp.property_code asc, sp.id desc
       limit ? offset ?
     `,
     [searchQuery, searchQuery, searchQuery, pageSize, offset]
@@ -687,7 +687,7 @@ export async function listPendingSystemPropertyRequests() {
       where ar.organization_id = ?
         and ar.resource_type = ?
         and ar.status = 'PENDING'
-      order by ar.submitted_at desc
+      order by ar.submitted_at desc, ar.id desc
     `,
     [context.session.organizationId, SYSTEM_PROPERTY_RESOURCE_TYPE]
   );

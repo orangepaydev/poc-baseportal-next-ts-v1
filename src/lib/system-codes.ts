@@ -262,12 +262,16 @@ function mapPendingSystemCodeRequest(
 function buildValueSnapshot(
   value: ManagedSystemCodeValue | SystemCodeValuePatch
 ): SystemCodeValueSnapshot {
+  const systemCodeValue =
+    'systemCodeValue' in value ? value.systemCodeValue : value.system_code_value;
+  const sortOrder = 'sortOrder' in value ? value.sortOrder : value.sort_order;
+
   return {
     ...('id' in value && typeof value.id === 'number' ? { id: value.id } : {}),
-    system_code_value: value.systemCodeValue ?? value.system_code_value,
+    system_code_value: systemCodeValue,
     description: value.description,
     status: value.status,
-    sort_order: value.sortOrder ?? value.sort_order,
+    sort_order: sortOrder,
   };
 }
 
@@ -417,7 +421,7 @@ async function findSystemCodeValues(systemCodeId: number) {
         scv.updated_at
       from system_code_values scv
       where scv.system_code_id = ?
-      order by scv.sort_order asc, scv.system_code_value asc
+      order by scv.sort_order asc, scv.system_code_value asc, scv.id desc
     `,
     [systemCodeId]
   );
@@ -628,7 +632,7 @@ export async function searchApprovedSystemCodesPage(input: {
         sc.description,
         sc.status,
         sc.updated_at
-      order by sc.system_code asc
+      order by sc.system_code asc, sc.id desc
       limit ? offset ?
     `,
     [searchQuery, searchQuery, searchQuery, pageSize, offset]
@@ -680,7 +684,7 @@ export async function listPendingSystemCodeRequests() {
       where ar.organization_id = ?
         and ar.resource_type = ?
         and ar.status = 'PENDING'
-      order by ar.submitted_at desc
+      order by ar.submitted_at desc, ar.id desc
     `,
     [context.session.organizationId, SYSTEM_CODE_RESOURCE_TYPE]
   );

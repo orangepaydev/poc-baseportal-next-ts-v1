@@ -154,7 +154,7 @@ export async function searchAuditEventsPage(input: {
       where ae.organization_id = ?
         and (? = '' or ae.event_type = ?)
         and (? = '' or ae.resource_type = ?)
-      order by ae.occurred_at desc
+      order by ae.occurred_at desc, ae.id desc
       limit ? offset ?
     `,
     [

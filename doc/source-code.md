@@ -306,6 +306,10 @@ App Router entry points, route files, and global styling.
 
 Reusable React components used across routes.
 
+- `src/components/sortable-query-table.tsx`
+  - Shared client-side result table for admin query pages.
+  - Supports sorting the currently loaded page of rows without re-running the database query.
+
 - `src/components/workspace-shell.tsx`
   - Shared client-side workspace shell.
   - Owns the top panel, collapsible left navigation, and main content frame.

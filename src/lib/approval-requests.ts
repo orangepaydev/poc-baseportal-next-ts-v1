@@ -189,7 +189,8 @@ export async function searchApprovalRequestsPage(input: {
         and (? = '' or ar.resource_type = ?)
       order by
         case when ar.status = 'PENDING' then 0 else 1 end,
-        ar.submitted_at desc
+        ar.submitted_at desc,
+        ar.id desc
       limit ? offset ?
     `,
     [
@@ -259,7 +260,7 @@ export async function getApprovalRequestById(
       left join users actor
         on actor.id = ara.acted_by_user_id
       where ara.approval_request_id = ?
-      order by ara.acted_at asc
+      order by ara.acted_at asc, ara.id desc
     `,
     [requestId]
   );

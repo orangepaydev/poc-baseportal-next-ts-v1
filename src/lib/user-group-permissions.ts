@@ -262,7 +262,7 @@ async function listAssignedPermissions(userGroupId: number) {
       inner join permission_resource_types resource_type
         on resource_type.id = permission.resource_type_id
       where group_permission.user_group_id = ?
-      order by permission.permission_code asc
+      order by permission.permission_code asc, permission.id desc
     `,
     [userGroupId]
   );
@@ -288,7 +288,7 @@ async function listUnassignedPermissions(userGroupId: number) {
         from user_group_permissions group_permission
         where group_permission.user_group_id = ?
       )
-      order by permission.permission_code asc
+      order by permission.permission_code asc, permission.id desc
     `,
     [userGroupId]
   );
@@ -573,7 +573,7 @@ export async function searchApprovedUserGroupPermissionTargetsPage(input: {
         user_group.description,
         user_group.status,
         user_group.updated_at
-      order by user_group.group_name asc
+      order by user_group.group_name asc, user_group.id desc
       limit ? offset ?
     `,
     [input.organizationId, likeQuery, likeQuery, pageSize, offset]
@@ -633,7 +633,7 @@ export async function listPendingUserGroupPermissionRequests(
       where approval_request.organization_id = ?
         and approval_request.resource_type = ?
         and approval_request.status = 'PENDING'
-      order by approval_request.submitted_at desc
+      order by approval_request.submitted_at desc, approval_request.id desc
     `,
     [organizationId, GROUP_PERMISSION_RESOURCE_TYPE]
   );

@@ -139,7 +139,7 @@ const loadAuthenticatedUserContext = cache(
             from permissions permission
             inner join permission_resource_types resource_type
               on resource_type.id = permission.resource_type_id
-            order by permission.permission_code
+            order by permission.permission_code, permission.id
           `
         : `
             select distinct
@@ -164,7 +164,7 @@ const loadAuthenticatedUserContext = cache(
               and user.status = 'ACTIVE'
               and user_group.organization_id = ?
               and user_group.status = 'ACTIVE'
-            order by permission.permission_code
+            order by permission.permission_code, permission.id
           `,
       isAdmin
         ? []

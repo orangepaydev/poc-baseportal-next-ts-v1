@@ -62,6 +62,12 @@ Use on: **Query** pages.
 
 Reference: The User Group Search page (`src/app/(workspace)/admin/user-group/page.tsx`) renders a search form, a results table with columns, pagination, and row-level status indicators.
 
+Query panel rules:
+
+- Query SQL should always include a deterministic fallback on the table primary key, such as `order by resource_name asc, id desc` or `order by submitted_at desc, id desc`.
+- Result tables may support client-side sorting for the currently loaded page of rows.
+- Client-side sorting should reorder only the loaded result set and must not trigger another database query.
+
 ## Menu Item and Permission Seeding
 
 When generating UI pages for a new resource, also generate the SQL and navigation entries required to make the new pages accessible.
@@ -135,3 +141,5 @@ Every generated page should follow these conventions from the User Group referen
 5. **Query param messaging** — pass success notices and errors as search params after redirect.
 6. **Back button** — View pages link back to Query; Edit, Create, and Approve pages link back to View or Query.
 7. **Conditional UI** — show or hide action buttons based on the user's permission codes and the resource state.
+8. **Stable list ordering** — keep the server-side query order deterministic by including the resource `id desc` as the default fallback sort key.
+9. **Loaded-row sorting** — query result tables may allow client-side column sorting, but only against the rows already loaded for the current page.

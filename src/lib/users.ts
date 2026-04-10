@@ -1082,7 +1082,7 @@ export async function searchApprovedUsersPage(input: {
       from users u
       where u.organization_id = ?
         and (? = '%%' or u.display_name like ?)
-      order by u.display_name asc
+      order by u.display_name asc, u.id desc
       limit ? offset ?
     `,
     [input.organizationId, likeQuery, likeQuery, pageSize, offset]
@@ -1132,7 +1132,7 @@ export async function listPendingUserRequests(organizationId: number) {
       where approval_request.organization_id = ?
         and approval_request.resource_type = ?
         and approval_request.status = 'PENDING'
-      order by approval_request.submitted_at desc
+      order by approval_request.submitted_at desc, approval_request.id desc
     `,
     [organizationId, USER_RESOURCE_TYPE]
   );

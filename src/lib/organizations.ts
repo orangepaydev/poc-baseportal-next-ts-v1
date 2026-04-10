@@ -994,7 +994,7 @@ export async function searchOrganizationsPage(input: {
         o.organization_name,
         o.status,
         o.updated_at
-      order by o.organization_name asc
+      order by o.organization_name asc, o.id desc
       limit ? offset ?
     `,
     [likeQuery, likeQuery, pageSize, offset]
@@ -1040,7 +1040,7 @@ export async function listPendingOrganizationRequests() {
         on submitter.id = approval_request.submitted_by_user_id
       where approval_request.resource_type = ?
         and approval_request.status = 'PENDING'
-      order by approval_request.submitted_at desc
+      order by approval_request.submitted_at desc, approval_request.id desc
     `,
     [ORGANIZATION_RESOURCE_TYPE]
   );

@@ -1,6 +1,11 @@
 import Link from 'next/link';
 import { Search } from 'lucide-react';
 
+import {
+  SortableQueryTable,
+  type SortableQueryTableColumn,
+  type SortableQueryTableRow,
+} from '@/components/sortable-query-table';
 import { Button } from '@/components/ui/button';
 import { requireNavigationItemAccess } from '@/lib/auth/authorization';
 import { searchAuditEventsPage } from '@/lib/audit-events';
@@ -16,6 +21,14 @@ type AuditLogPageProps = {
 };
 
 const PAGE_SIZE = 10;
+
+const AUDIT_LOG_TABLE_COLUMNS: readonly SortableQueryTableColumn[] = [
+  { key: 'id', label: 'ID' },
+  { key: 'eventType', label: 'Event Type' },
+  { key: 'resource', label: 'Resource' },
+  { key: 'actor', label: 'Actor' },
+  { key: 'occurredAt', label: 'Occurred At' },
+];
 
 function buildPageHref(
   eventTypeFilter: string,
@@ -76,6 +89,38 @@ export default async function AuditLogPage({
 
   const { rows: events, totalCount, page, pageSize } = result;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const eventRows: SortableQueryTableRow[] = events.map((event) => ({
+    id: event.id,
+    cells: {
+      id: {
+        kind: 'link',
+        href: `/admin/audit-log/${event.id}`,
+        primary: String(event.id),
+        sortValue: event.id,
+      },
+      eventType: {
+        kind: 'text',
+        primary: event.eventType,
+        sortValue: event.eventType,
+      },
+      resource: {
+        kind: 'text',
+        primary: event.resourceType,
+        secondary: event.resourceKey,
+        sortValue: event.resourceType,
+      },
+      actor: {
+        kind: 'text',
+        primary: event.actorDisplayName ?? '-',
+        sortValue: event.actorDisplayName ?? '',
+      },
+      occurredAt: {
+        kind: 'text',
+        primary: formatDate(event.occurredAt),
+        sortValue: new Date(event.occurredAt).getTime(),
+      },
+    },
+  }));
 
   return (
     <div className="grid gap-4">
@@ -146,77 +191,11 @@ export default async function AuditLogPage({
         </div>
 
         <div className="mt-6 overflow-hidden rounded-[24px] border border-slate-200">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    ID
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    Event Type
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    Resource
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    Actor
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                    Occurred At
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 bg-white">
-                {events.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="px-4 py-8 text-center text-sm text-slate-500"
-                    >
-                      No audit events matched the current filters.
-                    </td>
-                  </tr>
-                ) : null}
-
-                {events.map((event) => (
-                  <tr key={event.id} className="align-top">
-                    <td className="px-4 py-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-xl"
-                        asChild
-                      >
-                        <Link href={`/admin/audit-log/${event.id}`}>
-                          {event.id}
-                        </Link>
-                      </Button>
-                    </td>
-                    <td className="px-4 py-4">
-                      <p className="font-medium text-slate-900">
-                        {event.eventType}
-                      </p>
-                    </td>
-                    <td className="px-4 py-4">
-                      <p className="text-sm text-slate-700">
-                        {event.resourceType}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {event.resourceKey}
-                      </p>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-slate-700">
-                      {event.actorDisplayName ?? '—'}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-slate-700">
-                      {formatDate(event.occurredAt)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <SortableQueryTable
+            columns={AUDIT_LOG_TABLE_COLUMNS}
+            rows={eventRows}
+            emptyMessage="No audit events matched the current filters."
+          />
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2 px-5 py-5">
