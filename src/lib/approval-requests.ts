@@ -6,6 +6,7 @@ import {
   applyApprovedOrganizationPatch,
   revertRejectedCreateOrganizationPatch,
 } from '@/lib/organizations';
+import type { SystemPropertyChangePatch } from '@/lib/system-properties';
 import type { SystemCodeChangePatch } from '@/lib/system-codes';
 
 type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
@@ -513,6 +514,85 @@ async function applyApprovedSystemCodePatch(patch: SystemCodeChangePatch) {
   }
 }
 
+async function applyApprovedSystemPropertyPatch(
+  patch: SystemPropertyChangePatch
+) {
+  switch (patch.op) {
+    case 'CREATE_SYSTEM_PROPERTY': {
+      await db.execute(
+        `
+          insert into system_properties (
+            property_code,
+            description
+          )
+          values (?, ?)
+        `,
+        [patch.values.property_code, patch.values.description]
+      );
+      return;
+    }
+    case 'CREATE_SYSTEM_PROPERTY_VALUE': {
+      await db.execute(
+        `
+          insert into system_property_codes (
+            system_property_id,
+            property_item_code,
+            property_value,
+            description
+          )
+          values (?, ?, ?, ?)
+        `,
+        [
+          patch.target.system_property_id,
+          patch.values.property_item_code,
+          patch.values.property_value,
+          patch.values.description,
+        ]
+      );
+      return;
+    }
+    case 'UPDATE_SYSTEM_PROPERTY_VALUE': {
+      await db.execute(
+        `
+          update system_property_codes
+          set property_item_code = ?,
+              property_value = ?,
+              description = ?
+          where id = ?
+            and system_property_id = ?
+        `,
+        [
+          patch.values.property_item_code,
+          patch.values.property_value,
+          patch.values.description,
+          patch.target.id,
+          patch.target.system_property_id,
+        ]
+      );
+      return;
+    }
+    case 'DELETE_SYSTEM_PROPERTY_VALUE': {
+      await db.execute(
+        `
+          delete from system_property_codes
+          where id = ?
+            and system_property_id = ?
+        `,
+        [patch.target.id, patch.target.system_property_id]
+      );
+      return;
+    }
+    default:
+      {
+        const unsupportedPatch = patch as { op?: unknown };
+
+        throw new Error(
+          `Unsupported system property patch operation: ${String(unsupportedPatch.op)}`
+        );
+      }
+  }
+}
+
 async function revertRejectedCreate(
   resourceType: string,
   patch: ChangePatchPayload
@@ -529,6 +609,10 @@ async function revertRejectedCreate(
       systemCodePatch.target.id,
       'INACTIVE',
     ]);
+    return;
+  }
+
+  if (resourceType === 'SYSTEM_PROPERTY') {
     return;
   }
 
@@ -559,6 +643,10 @@ async function applyApprovedPatch(
       return applyApprovedOrganizationPatch(patch);
     case 'SYSTEM_CODE':
       return applyApprovedSystemCodePatch(patch as SystemCodeChangePatch);
+    case 'SYSTEM_PROPERTY':
+      return applyApprovedSystemPropertyPatch(
+        patch as SystemPropertyChangePatch
+      );
     case 'USER_GROUP':
       return applyApprovedUserGroupPatch(patch);
     default:

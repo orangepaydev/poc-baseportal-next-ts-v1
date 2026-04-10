@@ -165,6 +165,32 @@ App Router entry points, route files, and global styling.
   - Admin System Code search page.
   - Renders the query panel and the query result panel for global System Codes.
 
+- `src/app/(workspace)/admin/system-property/page.tsx`
+  - Admin System Property search page.
+  - Renders the query panel and query result panel for owner-only System Properties.
+
+- `src/app/(workspace)/admin/system-property/new/page.tsx`
+  - Create-request page for new System Properties.
+  - Submits maker requests instead of inserting directly into the approved live table.
+
+- `src/app/(workspace)/admin/system-property/[propertyId]/page.tsx`
+  - System Property detail page.
+  - Shows the property header and a listing panel for approved System Property Values.
+
+- `src/app/(workspace)/admin/system-property/[propertyId]/value/new/page.tsx`
+  - Create-request page for new System Property Values under an approved System Property.
+
+- `src/app/(workspace)/admin/system-property/[propertyId]/value/[valueId]/edit/page.tsx`
+  - System Property Value edit page.
+  - Allows edit and delete maker requests for an individual System Property Value.
+
+- `src/app/(workspace)/admin/system-property/[propertyId]/value/[valueId]/delete-system-property-value-request-button.tsx`
+  - Route-local client component for the System Property Value delete confirmation modal.
+
+- `src/app/(workspace)/admin/system-property/actions.ts`
+  - Server actions for the Admin System Property pages.
+  - Submits System Property and System Property Value change requests and supports route-aware redirects.
+
 - `src/app/(workspace)/admin/system-code/new/page.tsx`
   - Create-request page for new System Codes.
   - Submits maker requests instead of inserting directly into the approved live state.
@@ -183,6 +209,13 @@ App Router entry points, route files, and global styling.
 - `src/app/(workspace)/admin/system-code/actions.ts`
   - Server actions for the Admin System Code pages.
   - Submits System Code create and update requests and supports route-aware redirects.
+
+- `src/lib/system-properties.ts`
+  - Owner-only System Property query and maker-checker library.
+  - Loads approved System Properties and submits create, add, update, and delete approval requests for System Property Values.
+
+- `src/lib/change-interpreters/system-property.ts`
+  - Approval-request change interpreter for System Property and System Property Value requests.
 
 - `src/app/(workspace)/admin/audit-log/page.tsx`
   - Audit Log search page.

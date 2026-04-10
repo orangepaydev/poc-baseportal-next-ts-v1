@@ -1,5 +1,6 @@
 import type { ChangeInterpreter, InterpretedChange } from './types';
 import { organizationInterpreter } from './organization';
+import { systemPropertyInterpreter } from './system-property';
 import { systemCodeInterpreter } from './system-code';
 import { userInterpreter } from './user';
 import { userGroupInterpreter } from './user-group';
@@ -8,6 +9,7 @@ export type { InterpretedChange, InterpretedFieldChange } from './types';
 
 const interpreters: Record<string, ChangeInterpreter> = {
   ORGANIZATION: organizationInterpreter,
+  SYSTEM_PROPERTY: systemPropertyInterpreter,
   SYSTEM_CODE: systemCodeInterpreter,
   USER: userInterpreter,
   USER_GROUP: userGroupInterpreter,

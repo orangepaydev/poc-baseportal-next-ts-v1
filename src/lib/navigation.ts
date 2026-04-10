@@ -122,6 +122,18 @@ export const navigationGroups: NavigationGroup[] = [
         },
       },
       {
+        title: 'System Properties',
+        slug: 'system-property',
+        description:
+          'Manage owner-only system property sets and their values through maker-checker requests.',
+        href: '/admin/system-property',
+        access: {
+          menuPermissionCode: 'MENU_ADMIN_SYSTEM_PROPERTY',
+          requiredPermissionCodes: ['SYSTEM_PROPERTY_READ'],
+          ownerOrganizationOnly: true,
+        },
+      },
+      {
         title: 'Audit Log',
         slug: 'audit-log',
         description:
