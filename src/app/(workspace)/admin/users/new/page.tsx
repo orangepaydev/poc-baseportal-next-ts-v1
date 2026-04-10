@@ -96,15 +96,9 @@ export default async function NewUserPage({
             />
           </label>
 
-          <label className="space-y-2 text-sm font-medium text-slate-700">
-            <span>Password</span>
-            <input
-              name="password"
-              type="password"
-              placeholder="Enter password"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-normal text-slate-900 transition outline-none focus:border-cyan-500 focus:bg-white"
-            />
-          </label>
+          <p className="rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
+            A secure password will be generated and emailed to the user after the create request is approved.
+          </p>
 
           <label className="space-y-2 text-sm font-medium text-slate-700">
             <span>User Type</span>

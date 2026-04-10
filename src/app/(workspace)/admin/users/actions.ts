@@ -65,7 +65,6 @@ export async function createUserRequestAction(formData: FormData) {
       displayName: String(formData.get('displayName') ?? ''),
       email: String(formData.get('email') ?? ''),
       userType: String(formData.get('userType') ?? 'NORMAL'),
-      password: String(formData.get('password') ?? ''),
     });
     succeeded = true;
   } catch (error) {

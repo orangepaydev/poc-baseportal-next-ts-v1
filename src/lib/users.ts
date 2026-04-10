@@ -1,7 +1,10 @@
 import 'server-only';
 
-import { db } from '@/lib/db';
+import { createHash, randomBytes } from 'node:crypto';
+
 import { getAuthenticatedUserContext } from '@/lib/auth/authorization';
+import { db } from '@/lib/db';
+import { sendUserAccountCreatedEmail } from '@/lib/user-account-email';
 
 type UserStatus = 'ACTIVE' | 'LOCKED' | 'DISABLED';
 type UserType = 'ADMIN' | 'NORMAL';
@@ -21,6 +24,13 @@ type UserListRow = {
 
 type ExistingUserRow = UserListRow & {
   organization_id: number | string;
+  password_sha256: string;
+};
+
+type ExistingOrganizationRow = {
+  id: number | string;
+  organization_code: string;
+  organization_name: string;
 };
 
 type ApprovalRequestRow = {
@@ -64,10 +74,9 @@ type CreateUserPatch = {
     organization_id: number;
     username: string;
     display_name: string;
-    email: string | null;
+    email: string;
     user_type: UserType;
     status: UserStatus;
-    password_sha256: string;
   };
 };
 
@@ -141,6 +150,7 @@ export type UserApprovalRequest = {
 };
 
 const USER_RESOURCE_TYPE = 'USER';
+const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USER_FIELDS = [
   'username',
   'display_name',
@@ -183,6 +193,20 @@ function normalizeEmail(email: string) {
   const normalized = email.trim();
 
   return normalized ? normalized : null;
+}
+
+function validateRequiredEmail(email: string, label: string) {
+  const normalized = email.trim();
+
+  if (!normalized) {
+    throw new Error(`${label} is required.`);
+  }
+
+  if (!EMAIL_FORMAT.test(normalized)) {
+    throw new Error(`${label} must be a valid email address.`);
+  }
+
+  return normalized;
 }
 
 function normalizeDescription(description: string) {
@@ -229,14 +253,12 @@ function validateUserType(userType: string): UserType {
   return userType;
 }
 
-function validatePassword(password: string) {
-  const normalized = password.trim();
+function createPasswordDigest(password: string) {
+  return createHash('sha256').update(password).digest('hex');
+}
 
-  if (normalized.length < 6 || normalized.length > 128) {
-    throw new Error('Password must be between 6 and 128 characters.');
-  }
-
-  return normalized;
+function createSecurePassword() {
+  return randomBytes(18).toString('base64url');
 }
 
 function buildUserResourceKey(organizationCode: string, username: string) {
@@ -336,6 +358,7 @@ async function findExistingUserById(organizationId: number, userId: number) {
         u.username,
         u.display_name,
         u.email,
+        u.password_sha256,
         u.user_type,
         u.status,
         u.last_login_at,
@@ -352,15 +375,31 @@ async function findExistingUserByUsername(
   organizationId: number,
   username: string
 ) {
-  return db.queryOne<{ id: number | string }>(
+  return db.queryOne<{ id: number | string; password_sha256: string; status: UserStatus }>(
     `
       select
-        id
+        id,
+        password_sha256,
+        status
       from users
       where organization_id = ?
         and username = ?
     `,
     [organizationId, username]
+  );
+}
+
+async function findExistingOrganizationById(organizationId: number) {
+  return db.queryOne<ExistingOrganizationRow>(
+    `
+      select
+        id,
+        organization_code,
+        organization_name
+      from organizations
+      where id = ?
+    `,
+    [organizationId]
   );
 }
 
@@ -548,10 +587,9 @@ function buildCreatePatch(
   user: {
     username: string;
     displayName: string;
-    email: string | null;
+    email: string;
     userType: UserType;
     status: UserStatus;
-    passwordSha256: string;
   }
 ): CreateUserPatch {
   return {
@@ -563,7 +601,6 @@ function buildCreatePatch(
       email: user.email,
       user_type: user.userType,
       status: user.status,
-      password_sha256: user.passwordSha256,
     },
   };
 }
@@ -637,12 +674,36 @@ function ensureActionMatchesPatch(
 async function applyApprovedChange(patch: UserChangePatch) {
   switch (patch.op) {
     case 'CREATE_USER': {
-      await db.execute(
+      const organization = await findExistingOrganizationById(
+        patch.values.organization_id
+      );
+
+      if (!organization) {
+        throw new Error('The organization for this user no longer exists.');
+      }
+
+      const existingUser = await findExistingUserByUsername(
+        patch.values.organization_id,
+        patch.values.username
+      );
+
+      if (!existingUser) {
+        throw new Error('The user placeholder no longer exists.');
+      }
+
+      if (existingUser.status !== 'DISABLED') {
+        throw new Error('Only disabled user placeholders can be approved.');
+      }
+
+      const generatedPassword = createSecurePassword();
+      const generatedPasswordDigest = createPasswordDigest(generatedPassword);
+      const activateResult = await db.execute(
         `
           update users
           set display_name = ?,
               email = ?,
               user_type = ?,
+              password_sha256 = ?,
               status = 'ACTIVE'
           where organization_id = ?
             and username = ?
@@ -652,10 +713,49 @@ async function applyApprovedChange(patch: UserChangePatch) {
           patch.values.display_name,
           patch.values.email,
           patch.values.user_type,
+          generatedPasswordDigest,
           patch.values.organization_id,
           patch.values.username,
         ]
       );
+
+      if (activateResult.affectedRows !== 1) {
+        throw new Error('The user could not be activated for approval.');
+      }
+
+      try {
+        await sendUserAccountCreatedEmail({
+          organizationCode: organization.organization_code,
+          organizationName: organization.organization_name,
+          username: patch.values.username,
+          email: patch.values.email,
+          password: generatedPassword,
+        });
+      } catch (error) {
+        await db.execute(
+          `
+            update users
+            set password_sha256 = ?,
+                status = 'DISABLED'
+            where organization_id = ?
+              and username = ?
+          `,
+          [
+            existingUser.password_sha256,
+            patch.values.organization_id,
+            patch.values.username,
+          ]
+        );
+
+        if (error instanceof Error && error.message) {
+          throw new Error(
+            `The user approval could not be completed: ${error.message}`
+          );
+        }
+
+        throw new Error('The user approval could not be completed.');
+      }
+
       return;
     }
     case 'UPDATE_USER': {
@@ -911,14 +1011,12 @@ export async function submitCreateUserRequest(input: {
   displayName: string;
   email: string;
   userType: string;
-  password: string;
 }) {
   const context = await requirePermission('USER_WRITE');
   const username = validateUsername(input.username);
   const displayName = validateDisplayName(input.displayName);
-  const email = normalizeEmail(input.email);
+  const email = validateRequiredEmail(input.email, 'Email');
   const userType = validateUserType(input.userType);
-  const password = validatePassword(input.password);
   const status: UserStatus = 'ACTIVE';
   const resourceKey = buildUserResourceKey(
     context.session.organizationCode,
@@ -944,16 +1042,6 @@ export async function submitCreateUserRequest(input: {
     status,
   });
 
-  // Hash password using SHA-256
-  const passwordSha256Row = await db.queryOne<{ hash: string }>(
-    `select SHA2(?, 256) as hash`,
-    [password]
-  );
-
-  if (!passwordSha256Row) {
-    throw new Error('Failed to hash the password.');
-  }
-
   await createApprovalRequest({
     organizationId: context.session.organizationId,
     actorUserId: context.session.userId,
@@ -969,11 +1057,12 @@ export async function submitCreateUserRequest(input: {
       email,
       userType,
       status,
-      passwordSha256: passwordSha256Row.hash,
     }),
   });
 
-  // Insert user in DISABLED state; will be activated upon approval
+  const placeholderPasswordDigest = createPasswordDigest(createSecurePassword());
+
+  // Insert user in DISABLED state; approval will replace the placeholder password and activate the account.
   await db.execute(
     `
       insert into users (
@@ -993,7 +1082,7 @@ export async function submitCreateUserRequest(input: {
       username,
       displayName,
       email,
-      passwordSha256Row.hash,
+      placeholderPasswordDigest,
       userType,
     ]
   );

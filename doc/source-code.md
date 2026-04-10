@@ -348,6 +348,10 @@ Shared non-visual utilities and application metadata.
   - Domain-specific email template and sender for organization-admin account provisioning.
   - Builds the welcome message content used when a newly approved organization gets its initial admin users.
 
+- `src/lib/user-account-email.ts`
+  - Domain-specific email template and sender for approved user account provisioning.
+  - Builds the welcome message content used when an approved user-create request generates a secure password.
+
 - `src/lib/navigation.ts`
   - Central source of truth for navigation groups and menu items.
   - Exposes route metadata and permission requirements used by the sidebar, home page, and dynamic item pages.
@@ -360,6 +364,7 @@ Shared non-visual utilities and application metadata.
 - `src/lib/users.ts`
   - Server-side user workflow module.
   - Supports user search, detail lookups, pending-request lookups, maker submissions, and checker decisions.
+  - Approved user-create requests generate a secure password during approval and email it through the user account email wrapper.
 
 - `src/lib/organizations.ts`
   - Server-side organization workflow module.
