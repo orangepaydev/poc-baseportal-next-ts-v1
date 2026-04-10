@@ -8,6 +8,7 @@ import {
 } from '@/lib/organizations';
 import type { SystemCodeChangePatch } from '@/lib/system-codes';
 import type { SystemPropertyChangePatch } from '@/lib/system-properties';
+import type { UserGroupMembershipChangePatch } from '@/lib/user-group-memberships';
 import type { UserGroupPermissionChangePatch } from '@/lib/user-group-permissions';
 
 type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
@@ -635,6 +636,47 @@ async function applyApprovedGroupPermissionPatch(
   }
 }
 
+async function applyApprovedGroupMembershipPatch(
+  patch: UserGroupMembershipChangePatch
+) {
+  switch (patch.op) {
+    case 'UPDATE_GROUP_MEMBERSHIPS': {
+      for (const userId of patch.values.remove_user_ids) {
+        await db.execute(
+          `
+            delete from user_group_memberships
+            where user_group_id = ?
+              and user_id = ?
+          `,
+          [patch.target.user_group_id, userId]
+        );
+      }
+
+      for (const userId of patch.values.add_user_ids) {
+        await db.execute(
+          `
+            insert ignore into user_group_memberships (
+              user_group_id,
+              user_id
+            )
+            values (?, ?)
+          `,
+          [patch.target.user_group_id, userId]
+        );
+      }
+
+      return;
+    }
+    default: {
+      const unsupportedPatch = patch as { op?: unknown };
+
+      throw new Error(
+        `Unsupported group membership patch operation: ${String(unsupportedPatch.op)}`
+      );
+    }
+  }
+}
+
 async function revertRejectedCreate(
   resourceType: string,
   patch: ChangePatchPayload
@@ -692,6 +734,10 @@ async function applyApprovedPatch(
     case 'GROUP_PERMISSION':
       return applyApprovedGroupPermissionPatch(
         patch as UserGroupPermissionChangePatch
+      );
+    case 'GROUP_MEMBERSHIP':
+      return applyApprovedGroupMembershipPatch(
+        patch as UserGroupMembershipChangePatch
       );
     case 'USER_GROUP':
       return applyApprovedUserGroupPatch(patch);

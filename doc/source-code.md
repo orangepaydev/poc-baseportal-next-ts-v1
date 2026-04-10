@@ -121,6 +121,25 @@ App Router entry points, route files, and global styling.
   - Server actions for the Admin User Group Permission pages.
   - Submits user group permission change requests and supports route-aware redirects.
 
+- `src/app/(workspace)/admin/user-group-membership/page.tsx`
+  - Admin User Group Membership search page.
+  - Renders the query panel and query result panel for organisation-scoped user groups whose memberships can be reviewed.
+
+- `src/app/(workspace)/admin/user-group-membership/[groupId]/page.tsx`
+  - User Group Membership detail page.
+  - Shows user group detail data together with the currently assigned users for that group.
+
+- `src/app/(workspace)/admin/user-group-membership/[groupId]/edit/page.tsx`
+  - User Group Membership edit page.
+  - Allows submitting maker-checker requests to add or remove users from a user group.
+
+- `src/app/(workspace)/admin/user-group-membership/[groupId]/user-group-membership-editor.tsx`
+  - Route-local client component for the user selection table and search modal used by the edit page.
+
+- `src/app/(workspace)/admin/user-group-membership/actions.ts`
+  - Server actions for the Admin User Group Membership pages.
+  - Submits user group membership change requests and supports route-aware redirects.
+
 - `src/app/(workspace)/admin/user-group/[groupId]/delete-user-group-request-button.tsx`
   - Route-local client component for the delete confirmation modal.
   - Submits a delete maker request from the detail page.
@@ -237,11 +256,18 @@ App Router entry points, route files, and global styling.
   - Organisation-scoped user group permission query and maker-checker library.
   - Loads approved permission assignments for a user group and submits add or remove permission requests for review.
 
+- `src/lib/user-group-memberships.ts`
+  - Organisation-scoped user group membership query and maker-checker library.
+  - Loads approved user assignments for a user group and submits add or remove membership requests for review.
+
 - `src/lib/change-interpreters/system-property.ts`
   - Approval-request change interpreter for System Property and System Property Value requests.
 
 - `src/lib/change-interpreters/group-permission.ts`
   - Approval-request change interpreter for user group permission assignment requests.
+
+- `src/lib/change-interpreters/group-membership.ts`
+  - Approval-request change interpreter for user group membership assignment requests.
 
 - `src/app/(workspace)/admin/audit-log/page.tsx`
   - Audit Log search page.

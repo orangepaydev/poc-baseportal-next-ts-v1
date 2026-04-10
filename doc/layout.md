@@ -41,9 +41,13 @@ The navigation is driven by centralized data in `src/lib/navigation.ts`.
 
 - `Admin`
   - `Users`
+  - `Organizations`
   - `System Properties`
   - `System Codes`
   - `User Group`
+  - `User Group Permission`
+  - `User Group Membership`
+  - `Approval Request`
   - `Audit Log`
 
 ## Implementation Notes
