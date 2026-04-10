@@ -10,6 +10,16 @@ INSERT IGNORE INTO organizations (
   'ACTIVE'
 );
 
+INSERT IGNORE INTO organizations (
+  organization_code,
+  organization_name,
+  status
+) VALUES (
+  'acme',
+  'Acme',
+  'ACTIVE'
+);
+
 INSERT IGNORE INTO system_codes (
   system_code,
   description,
@@ -529,6 +539,32 @@ FROM (
 ) AS seed
 INNER JOIN organizations organization
   ON organization.organization_code = 'owner';
+
+INSERT IGNORE INTO users (
+  organization_id,
+  username,
+  display_name,
+  email,
+  password_sha256,
+  password_algo,
+  user_type,
+  status
+)
+SELECT
+  organization.id,
+  seed.username,
+  seed.display_name,
+  seed.email,
+  SHA2(seed.password_plaintext, 256),
+  'SHA256',
+  'ADMIN',
+  'ACTIVE'
+FROM (
+  SELECT 'acme1' AS username, 'Acme 1' AS display_name, 'acme1@example.com' AS email, 'acme1password' AS password_plaintext
+  UNION ALL SELECT 'acme2', 'Acme 2', 'acme2@example.com', 'acme2password'
+) AS seed
+INNER JOIN organizations organization
+  ON organization.organization_code = 'acme';
 
 INSERT IGNORE INTO user_groups (
   organization_id,
