@@ -51,15 +51,15 @@ Local Docker Compose entry point for infrastructure services.
 
 MariaDB bootstrap assets used by the Docker container on first startup.
 
-- `docker-init/mariadb/init/001-create-portaldb.sql`
+- `docker-init/mariadb/init/001-portaldb-create.sql`
   - Ensures the local development database exists with the expected character set and collation.
   - Creates the local development database user `dbuser` with password `dbpass123` and grants full access to `portaldb`.
 
-- `docker-init/mariadb/init/002-authz-approval-schema.sql`
+- `docker-init/mariadb/init/002-portaldb-schema.sql`
   - Creates the MariaDB schema for tenant-aware login, group permissions, approval workflow, and audit trail.
   - Seeds baseline permission metadata for the current workspace navigation and admin resources.
 
-- `docker-init/mariadb/init/003-owner.sql`
+- `docker-init/mariadb/init/003-portaldb-records.sql`
   - Seeds the initial `owner` tenant, users, user groups, memberships, and menu permission assignments.
 
 ## Source Tree

@@ -14,7 +14,7 @@ The agent should ask:
    - **Yes** → Generate all pages: Query, View, Create, Edit, and Delete.
    - **No** → Generate only the Query and View pages.
 2. **Which users should have access to this UI?**
-   - Read `docker-init/mariadb/init/003-owner.sql` to list the seeded user groups and their memberships:
+  - Read `docker-init/mariadb/init/003-portaldb-records.sql` to list the seeded user groups and their memberships:
      - `OwnerAdmin` — `root1`, `root2` (Admin users)
      - `OwnerUser` — `user1`, `user2` (Standard users)
      - `UserGroupMaker` — `root1`
@@ -85,7 +85,7 @@ Register the new resource in the appropriate navigation group. Follow the existi
 
 Reference: the User Group entry in `src/lib/navigation.ts`.
 
-### 2. Add permission rows to `docker-init/mariadb/init/002-authz-approval-schema.sql`
+### 2. Add permission rows to `docker-init/mariadb/init/002-portaldb-schema.sql`
 
 Insert a `MENU_ITEM` permission for the new menu and, if the resource supports CRUD operations, insert `READ`, `WRITE`, and `APPROVE` permissions. Follow the existing seed pattern:
 
@@ -98,11 +98,11 @@ UNION ALL SELECT '{RESOURCE_CODE}_APPROVE', '{RESOURCE_CODE}', 'APPROVE', '*', '
 
 If the resource type does not already exist in `permission_resource_types`, add a row for it as well.
 
-### 3. Assign permissions to user groups in `docker-init/mariadb/init/003-owner.sql`
+### 3. Assign permissions to user groups in `docker-init/mariadb/init/003-portaldb-records.sql`
 
 Grant the new menu and data permissions to the user groups selected by the user. The **OwnerAdmin** group always receives the menu and `READ` permissions by default.
 
-Follow the existing seed pattern in `003-owner.sql`:
+Follow the existing seed pattern in `003-portaldb-records.sql`:
 
 ```sql
 UNION ALL SELECT 'OwnerAdmin', 'MENU_ADMIN_{RESOURCE_CODE}'

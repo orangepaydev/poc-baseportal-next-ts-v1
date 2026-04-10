@@ -15,16 +15,16 @@ This project includes local MariaDB and SMTP development services via Docker Com
   - Uses fixed local-development MariaDB container settings.
   - Mounts initialization assets from `docker-init/mariadb/init`.
 
-- `docker-init/mariadb/init/001-create-portaldb.sql`
+- `docker-init/mariadb/init/001-portaldb-create.sql`
   - Runs on first database bootstrap.
   - Ensures the `portaldb` database exists with the expected character set and collation.
   - Creates the `dbuser` user with password `dbpass123` and grants full access to `portaldb`.
 
-- `docker-init/mariadb/init/002-authz-approval-schema.sql`
+- `docker-init/mariadb/init/002-portaldb-schema.sql`
   - Creates the application tables for organizations, users, user groups, permissions, approvals, locks, and audit events.
   - Seeds baseline permission metadata.
 
-- `docker-init/mariadb/init/003-owner.sql`
+- `docker-init/mariadb/init/003-portaldb-records.sql`
   - Seeds the `owner` organization, initial users, user groups, memberships, and menu access grants.
 
 ## Usage
