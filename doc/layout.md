@@ -41,6 +41,7 @@ The navigation is driven by centralized data in `src/lib/navigation.ts`.
 
 - `Admin`
   - `Users`
+  - `System Codes`
   - `User Group`
   - `Audit Log`
 

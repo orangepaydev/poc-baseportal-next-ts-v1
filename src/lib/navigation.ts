@@ -110,6 +110,18 @@ export const navigationGroups: NavigationGroup[] = [
         },
       },
       {
+        title: 'System Codes',
+        slug: 'system-code',
+        description:
+          'Manage global lookup codes and approved System Code Values through maker-checker requests.',
+        href: '/admin/system-code',
+        access: {
+          menuPermissionCode: 'MENU_ADMIN_SYSTEM_CODE',
+          requiredPermissionCodes: ['SYSTEM_CODE_READ'],
+          ownerOrganizationOnly: true,
+        },
+      },
+      {
         title: 'Audit Log',
         slug: 'audit-log',
         description:

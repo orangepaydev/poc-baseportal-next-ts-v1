@@ -6,6 +6,7 @@ import {
   applyApprovedOrganizationPatch,
   revertRejectedCreateOrganizationPatch,
 } from '@/lib/organizations';
+import type { SystemCodeChangePatch } from '@/lib/system-codes';
 
 type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 type ActionType = 'CREATE' | 'UPDATE' | 'DELETE' | 'ADD' | 'REMOVE';
@@ -441,12 +442,93 @@ async function applyApprovedUserGroupPatch(patch: ChangePatchPayload) {
   }
 }
 
+async function applyApprovedSystemCodePatch(patch: SystemCodeChangePatch) {
+  switch (patch.op) {
+    case 'CREATE_SYSTEM_CODE': {
+      await db.execute(
+        `
+          update system_codes
+          set description = ?,
+              status = ?
+          where id = ?
+        `,
+        [patch.values.description, patch.values.status, patch.target.id]
+      );
+      return;
+    }
+    case 'UPDATE_SYSTEM_CODE': {
+      await db.execute(
+        `
+          update system_codes
+          set description = ?,
+              status = ?
+          where id = ?
+        `,
+        [patch.values.description, patch.values.status, patch.target.id]
+      );
+
+      for (const valueId of patch.values.remove_value_ids) {
+        await db.execute(
+          `
+            delete from system_code_values
+            where id = ?
+              and system_code_id = ?
+          `,
+          [valueId, patch.target.id]
+        );
+      }
+
+      for (const value of patch.values.add_values) {
+        await db.execute(
+          `
+            insert into system_code_values (
+              system_code_id,
+              system_code_value,
+              description,
+              status,
+              sort_order
+            )
+            values (?, ?, ?, ?, ?)
+          `,
+          [
+            patch.target.id,
+            value.system_code_value,
+            value.description,
+            value.status,
+            value.sort_order,
+          ]
+        );
+      }
+
+      return;
+    }
+    default:
+      {
+        const unsupportedPatch = patch as { op?: unknown };
+
+      throw new Error(
+        `Unsupported system code patch operation: ${String(unsupportedPatch.op)}`
+      );
+      }
+  }
+}
+
 async function revertRejectedCreate(
   resourceType: string,
   patch: ChangePatchPayload
 ) {
   if (resourceType === 'ORGANIZATION') {
     await revertRejectedCreateOrganizationPatch(patch);
+    return;
+  }
+
+  if (resourceType === 'SYSTEM_CODE' && patch.op === 'CREATE_SYSTEM_CODE') {
+    const systemCodePatch = patch as SystemCodeChangePatch;
+
+    await db.execute('delete from system_codes where id = ? and status = ?', [
+      systemCodePatch.target.id,
+      'INACTIVE',
+    ]);
     return;
   }
 
@@ -475,6 +557,8 @@ async function applyApprovedPatch(
   switch (resourceType) {
     case 'ORGANIZATION':
       return applyApprovedOrganizationPatch(patch);
+    case 'SYSTEM_CODE':
+      return applyApprovedSystemCodePatch(patch as SystemCodeChangePatch);
     case 'USER_GROUP':
       return applyApprovedUserGroupPatch(patch);
     default:

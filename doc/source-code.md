@@ -161,6 +161,29 @@ App Router entry points, route files, and global styling.
   - Submits organization change requests and processes approval decisions.
   - Supports route-aware redirects for the list, detail, edit, and create pages.
 
+- `src/app/(workspace)/admin/system-code/page.tsx`
+  - Admin System Code search page.
+  - Renders the query panel and the query result panel for global System Codes.
+
+- `src/app/(workspace)/admin/system-code/new/page.tsx`
+  - Create-request page for new System Codes.
+  - Submits maker requests instead of inserting directly into the approved live state.
+
+- `src/app/(workspace)/admin/system-code/[systemCodeId]/page.tsx`
+  - System Code detail page.
+  - Shows top-level actions and a listing panel for the current System Code Values.
+
+- `src/app/(workspace)/admin/system-code/[systemCodeId]/edit/page.tsx`
+  - System Code edit page.
+  - Allows editing the System Code header and submitting System Code Value add or remove changes through maker-checker.
+
+- `src/app/(workspace)/admin/system-code/[systemCodeId]/system-code-values-editor.tsx`
+  - Route-local client component for adding new System Code Value rows and marking existing values for removal.
+
+- `src/app/(workspace)/admin/system-code/actions.ts`
+  - Server actions for the Admin System Code pages.
+  - Submits System Code create and update requests and supports route-aware redirects.
+
 - `src/app/(workspace)/admin/audit-log/page.tsx`
   - Audit Log search page.
   - Renders the query panel with event type and resource type filters and paginated results.
@@ -257,6 +280,10 @@ Shared non-visual utilities and application metadata.
   - Server-side organization workflow module.
   - Supports organization search, detail lookups, pending-request lookups, maker submissions, and checker decisions.
 
+- `src/lib/system-codes.ts`
+  - Server-side System Code workflow module.
+  - Supports search, detail lookups with System Code Values, pending-request lookups, and maker submissions for create and update changes.
+
 - `src/lib/audit-events.ts`
   - Server-side audit event query module.
   - Supports paginated search with event type and resource type filtering, and single-record detail lookups.
@@ -280,6 +307,9 @@ Shared non-visual utilities and application metadata.
 
 - `src/lib/change-interpreters/organization.ts`
   - Interprets `ORGANIZATION` resource type changes from `changed_fields` or before/after state snapshots.
+
+- `src/lib/change-interpreters/system-code.ts`
+  - Interprets `SYSTEM_CODE` resource type changes, including added and removed System Code Values.
 
 - `src/lib/utils.ts`
   - Shared utility helpers.

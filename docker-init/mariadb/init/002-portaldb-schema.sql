@@ -228,6 +228,7 @@ INSERT INTO permission_actions (action_code, action_name, description) VALUES
 INSERT INTO permission_resource_types (resource_code, resource_name, description) VALUES
   ('MENU_ITEM', 'Menu Item', 'Navigation item or page visibility permission.'),
   ('ORGANIZATION', 'Organization', 'Organization administration permission.'),
+  ('SYSTEM_CODE', 'System Code', 'System code and system code value administration permission.'),
   ('USER', 'User', 'User administration permission.'),
   ('USER_GROUP', 'User Group', 'User group administration permission.'),
   ('GROUP_PERMISSION', 'Group Permission', 'Manage permissions attached to a user group.'),
@@ -256,11 +257,15 @@ FROM (
   UNION ALL SELECT 'MENU_TRANSACTION_PAYMENTS', 'MENU_ITEM', 'MENU', 'transaction/payments', 'Access Transaction Payments', 'Shows the Transaction Payments menu item.'
   UNION ALL SELECT 'MENU_ADMIN_USERS', 'MENU_ITEM', 'MENU', 'admin/users', 'Access Admin Users', 'Shows the Admin Users menu item.'
   UNION ALL SELECT 'MENU_ADMIN_ORGANIZATION', 'MENU_ITEM', 'MENU', 'admin/organization', 'Access Admin Organization', 'Shows the Admin Organization menu item.'
+  UNION ALL SELECT 'MENU_ADMIN_SYSTEM_CODE', 'MENU_ITEM', 'MENU', 'admin/system-code', 'Access Admin System Codes', 'Shows the Admin System Codes menu item.'
   UNION ALL SELECT 'MENU_ADMIN_USER_GROUP', 'MENU_ITEM', 'MENU', 'admin/user-group', 'Access Admin User Group', 'Shows the Admin User Group menu item.'
   UNION ALL SELECT 'MENU_ADMIN_AUDIT_LOG', 'MENU_ITEM', 'MENU', 'admin/audit-log', 'Access Admin Audit Log', 'Shows the Admin Audit Log menu item.'
   UNION ALL SELECT 'ORGANIZATION_READ', 'ORGANIZATION', 'READ', '*', 'Read Organizations', 'Allows viewing organization records.'
   UNION ALL SELECT 'ORGANIZATION_WRITE', 'ORGANIZATION', 'WRITE', '*', 'Maintain Organizations', 'Allows requesting organization changes.'
   UNION ALL SELECT 'ORGANIZATION_APPROVE', 'ORGANIZATION', 'APPROVE', '*', 'Approve Organization Changes', 'Allows approving organization changes.'
+  UNION ALL SELECT 'SYSTEM_CODE_READ', 'SYSTEM_CODE', 'READ', '*', 'Read System Codes', 'Allows viewing System Codes and System Code Values.'
+  UNION ALL SELECT 'SYSTEM_CODE_WRITE', 'SYSTEM_CODE', 'WRITE', '*', 'Maintain System Codes', 'Allows requesting System Code changes.'
+  UNION ALL SELECT 'SYSTEM_CODE_APPROVE', 'SYSTEM_CODE', 'APPROVE', '*', 'Approve System Code Changes', 'Allows approving System Code changes.'
   UNION ALL SELECT 'USER_READ', 'USER', 'READ', '*', 'Read Users', 'Allows viewing user records.'
   UNION ALL SELECT 'USER_WRITE', 'USER', 'WRITE', '*', 'Maintain Users', 'Allows requesting user changes.'
   UNION ALL SELECT 'USER_APPROVE', 'USER', 'APPROVE', '*', 'Approve User Changes', 'Allows approving user changes.'
