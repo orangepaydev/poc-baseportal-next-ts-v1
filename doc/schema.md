@@ -18,6 +18,8 @@ The design separates live approved data from pending changes. Live tables contai
 - `user_groups` stores approved groups within each organization.
 - `system_codes` stores lookup-code definitions.
 - `system_code_values` stores the allowed values for each lookup code.
+- `system_properties` stores named system-property groups.
+- `system_property_codes` stores code, value, and description entries for each system property.
 - `permissions` defines the permission catalog.
 - `user_group_permissions` assigns permissions to groups.
 - `user_group_memberships` assigns users to groups.
@@ -81,6 +83,22 @@ Allowed values for a lookup code.
 - `description` is limited to 200 characters.
 - `status` supports active and inactive lifecycle state for approval-driven maintenance.
 - `sort_order` supports stable presentation ordering within a code list.
+
+### system_properties
+
+Named system-property groups.
+
+- `property_code` is the stable logical key for a system-property set.
+- `description` stores the business meaning of the property set.
+
+### system_property_codes
+
+Code and value entries for a system-property group.
+
+- Belongs to one `system_properties` row.
+- `property_item_code` is unique within a given system property.
+- `property_value` stores the configured value as text.
+- `description` stores the business meaning of the property entry.
 
 ### permission_actions
 

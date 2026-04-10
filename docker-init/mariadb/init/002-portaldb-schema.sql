@@ -74,6 +74,31 @@ CREATE TABLE system_code_values (
     FOREIGN KEY (system_code_id) REFERENCES system_codes (id)
 );
 
+CREATE TABLE system_properties (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  property_code VARCHAR(100) NOT NULL,
+  description VARCHAR(200) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_system_properties_code (property_code)
+);
+
+CREATE TABLE system_property_codes (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  system_property_id BIGINT UNSIGNED NOT NULL,
+  property_item_code VARCHAR(100) NOT NULL,
+  property_value VARCHAR(255) NOT NULL,
+  description VARCHAR(200) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_system_property_codes_pair (system_property_id, property_item_code),
+  KEY idx_system_property_codes_property (system_property_id),
+  CONSTRAINT fk_system_property_codes_property
+    FOREIGN KEY (system_property_id) REFERENCES system_properties (id)
+);
+
 CREATE TABLE permission_actions (
   action_code VARCHAR(30) NOT NULL,
   action_name VARCHAR(100) NOT NULL,

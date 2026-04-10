@@ -20,6 +20,36 @@ INSERT IGNORE INTO system_codes (
   'ACTIVE'
 );
 
+INSERT IGNORE INTO system_properties (
+  property_code,
+  description
+) VALUES
+  ('PortalConfig', 'Configuration for the Portal'),
+  ('EngineConfig', 'Configuration for the Engine'),
+  ('ReportConfig', 'Configuration for the Report generation');
+
+INSERT IGNORE INTO system_property_codes (
+  system_property_id,
+  property_item_code,
+  property_value,
+  description
+)
+SELECT
+  system_property.id,
+  seed.property_item_code,
+  seed.property_value,
+  seed.description
+FROM (
+  SELECT 'PortalConfig' AS property_code, 'SecurityEnforcement' AS property_item_code, 'strict' AS property_value, 'Enforce the security' AS description
+  UNION ALL SELECT 'PortalConfig', 'LoginLockedOutCount', '5', 'Indicate the number of in correct login that will cause account to be locked out'
+  UNION ALL SELECT 'PortalConfig', 'QueryMaxRecord', '1000', 'Max number of record that will be returned by the query'
+  UNION ALL SELECT 'EngineConfig', 'RestRequestTimeoutMSec', '500', 'The Rest timeout in Mili seconds'
+  UNION ALL SELECT 'EngineConfig', 'RequestRetryCount', '2', 'the number of retries the Rest request will be attempted'
+  UNION ALL SELECT 'ReportConfig', 'MaxReportSizeMB', '100', 'the max size of the report'
+) AS seed
+INNER JOIN system_properties system_property
+  ON system_property.property_code = seed.property_code;
+
 INSERT IGNORE INTO system_code_values (
   system_code_id,
   system_code_value,
