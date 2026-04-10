@@ -132,6 +132,25 @@ export const navigationGroups: NavigationGroup[] = [
         },
       },
       {
+        title: 'Audit Log',
+        slug: 'audit-log',
+        description:
+          'Placeholder view for operational history, traceability, and reviews.',
+        href: '/admin/audit-log',
+        access: {
+          menuPermissionCode: 'MENU_ADMIN_AUDIT_LOG',
+          requiredPermissionCodes: ['AUDIT_LOG_READ'],
+        },
+      },
+    ],
+  },
+  {
+    title: 'System',
+    slug: 'system',
+    description:
+      'Owner-only platform configuration and lookup maintenance views.',
+    items: [
+      {
         title: 'System Codes',
         slug: 'system-code',
         description:
@@ -153,17 +172,6 @@ export const navigationGroups: NavigationGroup[] = [
           menuPermissionCode: 'MENU_ADMIN_SYSTEM_PROPERTY',
           requiredPermissionCodes: ['SYSTEM_PROPERTY_READ'],
           ownerOrganizationOnly: true,
-        },
-      },
-      {
-        title: 'Audit Log',
-        slug: 'audit-log',
-        description:
-          'Placeholder view for operational history, traceability, and reviews.',
-        href: '/admin/audit-log',
-        access: {
-          menuPermissionCode: 'MENU_ADMIN_AUDIT_LOG',
-          requiredPermissionCodes: ['AUDIT_LOG_READ'],
         },
       },
     ],

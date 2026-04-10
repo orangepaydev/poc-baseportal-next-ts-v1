@@ -19,7 +19,7 @@ export default async function NewSystemPropertyPage({
 }: NewSystemPropertyPageProps) {
   const params = await searchParams;
   const { permissionCodes } = await requireNavigationItemAccess(
-    'admin',
+    'system',
     'system-property'
   );
 

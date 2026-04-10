@@ -48,7 +48,7 @@ export default async function SystemPropertyPage({
   const searchQuery = (params.q ?? '').trim();
   const currentPage = Math.max(1, Number.parseInt(params.page ?? '1', 10) || 1);
   const { permissionCodes } = await requireNavigationItemAccess(
-    'admin',
+    'system',
     'system-property'
   );
   const canManage = permissionCodes.includes('SYSTEM_PROPERTY_WRITE');

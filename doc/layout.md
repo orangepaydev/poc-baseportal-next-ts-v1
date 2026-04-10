@@ -24,6 +24,7 @@ See `doc/source-code.md` for the current source file map and where each part of 
   - Current folders:
     - `Transaction`
     - `Admin`
+    - `System`
 
 - Right main panel
   - Renders the active page content.
@@ -42,13 +43,15 @@ The navigation is driven by centralized data in `src/lib/navigation.ts`.
 - `Admin`
   - `Users`
   - `Organizations`
-  - `System Properties`
-  - `System Codes`
   - `User Group`
   - `User Group Permission`
   - `User Group Membership`
   - `Approval Request`
   - `Audit Log`
+
+- `System`
+  - `System Properties`
+  - `System Codes`
 
 ## Implementation Notes
 

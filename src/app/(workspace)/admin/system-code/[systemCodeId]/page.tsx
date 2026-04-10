@@ -35,7 +35,7 @@ export default async function SystemCodeDetailPage({
 }: SystemCodeDetailPageProps) {
   const [{ systemCodeId }, queryParams] = await Promise.all([params, searchParams]);
   const { permissionCodes } = await requireNavigationItemAccess(
-    'admin',
+    'system',
     'system-code'
   );
   const resolvedSystemCodeId = Number(systemCodeId);

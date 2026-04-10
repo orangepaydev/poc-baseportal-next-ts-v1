@@ -24,7 +24,7 @@ export default async function NewSystemPropertyValuePage({
 }: NewSystemPropertyValuePageProps) {
   const [{ propertyId }, queryParams] = await Promise.all([params, searchParams]);
   const { permissionCodes } = await requireNavigationItemAccess(
-    'admin',
+    'system',
     'system-property'
   );
 

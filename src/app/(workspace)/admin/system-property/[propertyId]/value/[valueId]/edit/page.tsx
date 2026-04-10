@@ -34,7 +34,7 @@ export default async function EditSystemPropertyValuePage({
     searchParams,
   ]);
   const { permissionCodes } = await requireNavigationItemAccess(
-    'admin',
+    'system',
     'system-property'
   );
 

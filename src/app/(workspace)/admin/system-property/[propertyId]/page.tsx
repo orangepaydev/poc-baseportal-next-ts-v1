@@ -35,7 +35,7 @@ export default async function SystemPropertyDetailPage({
 }: SystemPropertyDetailPageProps) {
   const [{ propertyId }, queryParams] = await Promise.all([params, searchParams]);
   const { permissionCodes } = await requireNavigationItemAccess(
-    'admin',
+    'system',
     'system-property'
   );
   const resolvedPropertyId = Number(propertyId);
