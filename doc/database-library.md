@@ -57,15 +57,23 @@ await db.query('select * from users where organization_id = ? and status = ?', [
 
 For PostgreSQL, the library converts `?` placeholders into `$1`, `$2`, and so on before executing the statement.
 
+## Query Result Limit
+
+- `DB_QUERY_RESULT_LIMIT` sets the default maximum number of rows returned by `db.query()` when the SQL does not already include its own `LIMIT` clause.
+- If the value is omitted, the library defaults to `1000` rows.
+- The library applies a hard ceiling of `10000` rows even if the configured value is higher.
+
 ## Query API
 
 The main entry point is `src/lib/db/index.ts`.
 
 - `db.query<T>(sql, params?, options?)`
   - returns zero or more rows
+  - when the SQL does not already include `LIMIT`, the library appends one using `DB_QUERY_RESULT_LIMIT`
 - `db.queryOne<T>(sql, params?, options?)`
   - returns `null` when no row exists
   - throws if more than one row is returned
+  - internally limits the read to two rows so it can still detect duplicate matches efficiently
 - `db.execute(sql, params?, options?)`
   - runs a write-oriented statement and returns metadata such as affected rows
 

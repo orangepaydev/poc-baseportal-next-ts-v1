@@ -43,6 +43,7 @@ export type DatabaseConnectionConfig = {
 export type DatabaseRuntimeConfig = {
   defaultConnectionName: string;
   connections: Record<string, DatabaseConnectionConfig>;
+  queryResultLimit: number;
 };
 
 export interface DatabaseAdapter {

@@ -7,6 +7,8 @@ import type {
 } from '@/lib/db/types';
 
 const DEFAULT_CONNECTION_NAME = 'default';
+const DEFAULT_QUERY_RESULT_LIMIT = 1000;
+const HARD_MAX_QUERY_RESULT_LIMIT = 10000;
 const SUPPORTED_DATABASE_TYPES: DatabaseType[] = ['mariadb', 'postgresql'];
 
 type GlobalDatabaseConfigLogState = typeof globalThis & {
@@ -17,10 +19,12 @@ export function loadDatabaseConfig(
   env: NodeJS.ProcessEnv = process.env
 ): DatabaseRuntimeConfig {
   const connectionNames = resolveConnectionNames(env);
+  const queryResultLimit = resolveQueryResultLimit(env);
 
   if (connectionNames.length === 0) {
     return {
       defaultConnectionName: DEFAULT_CONNECTION_NAME,
+      queryResultLimit,
       connections: {},
     };
   }
@@ -45,11 +49,13 @@ export function loadDatabaseConfig(
 
   logDatabaseConfigured({
     defaultConnectionName,
+    queryResultLimit,
     connections,
   });
 
   return {
     defaultConnectionName,
+    queryResultLimit,
     connections,
   };
 }
@@ -60,7 +66,7 @@ function logDatabaseConfigured(runtimeConfig: DatabaseRuntimeConfig) {
     .map((connection) => `${connection.name}:${connection.type}`)
     .sort()
     .join(', ');
-  const logKey = `${runtimeConfig.defaultConnectionName}|${connectionSummary}`;
+  const logKey = `${runtimeConfig.defaultConnectionName}|${runtimeConfig.queryResultLimit}|${connectionSummary}`;
 
   if (globalDatabaseState.__databaseConfigurationLogKey === logKey) {
     return;
@@ -69,8 +75,24 @@ function logDatabaseConfigured(runtimeConfig: DatabaseRuntimeConfig) {
   globalDatabaseState.__databaseConfigurationLogKey = logKey;
 
   console.info(
-    `[db] Database configured. default=${runtimeConfig.defaultConnectionName}; connections=${connectionSummary}`
+    `[db] Database configured. default=${runtimeConfig.defaultConnectionName}; queryResultLimit=${runtimeConfig.queryResultLimit}; connections=${connectionSummary}`
   );
+}
+
+function resolveQueryResultLimit(env: NodeJS.ProcessEnv) {
+  const rawValue = env.DB_QUERY_RESULT_LIMIT?.trim();
+
+  if (!rawValue) {
+    return DEFAULT_QUERY_RESULT_LIMIT;
+  }
+
+  const parsedValue = Number(rawValue);
+
+  if (!Number.isInteger(parsedValue) || parsedValue < 1) {
+    throw new Error('DB_QUERY_RESULT_LIMIT must be a positive integer.');
+  }
+
+  return Math.min(parsedValue, HARD_MAX_QUERY_RESULT_LIMIT);
 }
 
 function resolveConnectionNames(env: NodeJS.ProcessEnv) {

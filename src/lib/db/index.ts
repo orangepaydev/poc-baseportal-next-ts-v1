@@ -40,7 +40,10 @@ function logDatabaseStarted(config: DatabaseConnectionConfig) {
 class DatabaseConnection {
   private readonly adapter: DatabaseAdapter;
 
-  constructor(private readonly config: DatabaseConnectionConfig) {
+  constructor(
+    private readonly config: DatabaseConnectionConfig,
+    private readonly queryResultLimit: number
+  ) {
     this.adapter = createAdapter(config);
   }
 
@@ -48,14 +51,14 @@ class DatabaseConnection {
     sql: string,
     params: QueryParameters = []
   ) {
-    return this.adapter.query<T>(sql, params);
+    return this.runReadQuery<T>(sql, params, this.queryResultLimit);
   }
 
   async queryOne<T extends DatabaseRecord = DatabaseRecord>(
     sql: string,
     params: QueryParameters = []
   ) {
-    const rows = await this.query<T>(sql, params);
+    const rows = await this.runReadQuery<T>(sql, params, 2);
 
     if (rows.length > 1) {
       throw new Error(
@@ -68,6 +71,14 @@ class DatabaseConnection {
 
   execute(sql: string, params: QueryParameters = []) {
     return this.adapter.execute(sql, params);
+  }
+
+  private runReadQuery<T extends DatabaseRecord = DatabaseRecord>(
+    sql: string,
+    params: QueryParameters,
+    rowLimit: number
+  ) {
+    return this.adapter.query<T>(applyQueryResultLimit(sql, rowLimit), params);
   }
 
   close() {
@@ -97,7 +108,10 @@ export class DatabaseManager {
       );
     }
 
-    const connection = new DatabaseConnection(connectionConfig);
+    const connection = new DatabaseConnection(
+      connectionConfig,
+      this.runtimeConfig.queryResultLimit
+    );
     this.connections.set(connectionName, connection);
     logDatabaseStarted(connectionConfig);
 
@@ -135,6 +149,16 @@ export class DatabaseManager {
 
     this.connections.clear();
   }
+}
+
+function applyQueryResultLimit(sql: string, rowLimit: number) {
+  const normalizedSql = sql.trim().replace(/;+\s*$/, '');
+
+  if (/\blimit\b/i.test(normalizedSql)) {
+    return normalizedSql;
+  }
+
+  return `${normalizedSql}\nlimit ${rowLimit}`;
 }
 
 function createAdapter(config: DatabaseConnectionConfig) {
