@@ -1321,6 +1321,12 @@ export async function submitResetUserPasswordRequest(input: {
 
   requirePositiveInteger(input.userId, 'User');
 
+  if (input.userId === context.session.userId) {
+    throw new Error(
+      'You cannot request a password reset for your own account.'
+    );
+  }
+
   const existingUser = await findExistingUserById(
     context.session.organizationId,
     input.userId

@@ -71,6 +71,7 @@ export default async function UserDetailPage({
     !pendingRequest &&
     user.status === 'ACTIVE' &&
     canManage &&
+    session.userId !== user.id &&
     Boolean(user.email);
   const detailPath = `/admin/users/${user.id}`;
 
