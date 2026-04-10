@@ -79,6 +79,7 @@ When adding a new service, document these items:
 - `src/lib/email.ts`
 - `src/lib/organization-admin-account-email.ts`
 - `src/lib/user-account-email.ts`
+- `src/lib/user-password-reset-email.ts`
 
 ### Configuration
 
@@ -225,6 +226,7 @@ if (isEmailConfigured()) {
 - If delivery becomes more complex later, preserve the current `sendEmail()` helper as the lowest-level SMTP boundary unless there is a strong reason to replace it.
 - Organization approval onboarding email now uses the wrapper in `src/lib/organization-admin-account-email.ts` so the template can be updated without changing approval workflow code.
 - User-create approval email uses the wrapper in `src/lib/user-account-email.ts` so the approved-password delivery stays in one place.
+- User password-reset approval email uses the wrapper in `src/lib/user-password-reset-email.ts` so reset delivery logic stays separate from the create-user template.
 
 ### Error Handling Guidance
 

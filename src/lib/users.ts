@@ -5,6 +5,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { getAuthenticatedUserContext } from '@/lib/auth/authorization';
 import { db } from '@/lib/db';
 import { sendUserAccountCreatedEmail } from '@/lib/user-account-email';
+import { sendUserPasswordResetEmail } from '@/lib/user-password-reset-email';
 
 type UserStatus = 'ACTIVE' | 'LOCKED' | 'DISABLED';
 type UserType = 'ADMIN' | 'NORMAL';
@@ -102,7 +103,19 @@ type DeleteUserPatch = {
   };
 };
 
-type UserChangePatch = CreateUserPatch | UpdateUserPatch | DeleteUserPatch;
+type ResetUserPasswordPatch = {
+  op: 'RESET_USER_PASSWORD';
+  target: {
+    id: number;
+    organization_id: number;
+  };
+};
+
+type UserChangePatch =
+  | CreateUserPatch
+  | UpdateUserPatch
+  | DeleteUserPatch
+  | ResetUserPasswordPatch;
 
 export type ManagedUser = {
   id: number;
@@ -158,6 +171,8 @@ const USER_FIELDS = [
   'user_type',
   'status',
 ] as const;
+const USER_PASSWORD_RESET_MESSAGE =
+  'Generate a secure password and email it to the user upon approval.';
 
 function toNumber(value: unknown) {
   return Number(value ?? 0);
@@ -643,6 +658,19 @@ function buildDeletePatch(
   };
 }
 
+function buildResetPasswordPatch(
+  organizationId: number,
+  userId: number
+): ResetUserPasswordPatch {
+  return {
+    op: 'RESET_USER_PASSWORD',
+    target: {
+      id: userId,
+      organization_id: organizationId,
+    },
+  };
+}
+
 function parseChangePatch(value: unknown) {
   const patch = parseJsonColumn<UserChangePatch>(value);
 
@@ -660,7 +688,7 @@ function ensureActionMatchesPatch(
   const expectedActionType =
     patch.op === 'CREATE_USER'
       ? 'CREATE'
-      : patch.op === 'UPDATE_USER'
+      : patch.op === 'UPDATE_USER' || patch.op === 'RESET_USER_PASSWORD'
         ? 'UPDATE'
         : 'DELETE';
 
@@ -787,6 +815,83 @@ async function applyApprovedChange(patch: UserChangePatch) {
           patch.target.organization_id,
         ]
       );
+      return;
+    }
+    case 'RESET_USER_PASSWORD': {
+      const existingUser = await findExistingUserById(
+        patch.target.organization_id,
+        patch.target.id
+      );
+
+      if (!existingUser) {
+        throw new Error('The user no longer exists.');
+      }
+
+      if (!existingUser.email) {
+        throw new Error(
+          'The user no longer has an email address for password delivery.'
+        );
+      }
+
+      const organization = await findExistingOrganizationById(
+        patch.target.organization_id
+      );
+
+      if (!organization) {
+        throw new Error('The organization for this user no longer exists.');
+      }
+
+      const generatedPassword = createSecurePassword();
+      const generatedPasswordDigest = createPasswordDigest(generatedPassword);
+
+      await db.execute(
+        `
+          update users
+          set password_sha256 = ?
+          where id = ?
+            and organization_id = ?
+        `,
+        [
+          generatedPasswordDigest,
+          patch.target.id,
+          patch.target.organization_id,
+        ]
+      );
+
+      try {
+        await sendUserPasswordResetEmail({
+          organizationCode: organization.organization_code,
+          organizationName: organization.organization_name,
+          username: existingUser.username,
+          email: existingUser.email,
+          password: generatedPassword,
+        });
+      } catch (error) {
+        await db.execute(
+          `
+            update users
+            set password_sha256 = ?
+            where id = ?
+              and organization_id = ?
+          `,
+          [
+            existingUser.password_sha256,
+            patch.target.id,
+            patch.target.organization_id,
+          ]
+        );
+
+        if (error instanceof Error && error.message) {
+          throw new Error(
+            `The password reset approval could not be completed: ${error.message}`
+          );
+        }
+
+        throw new Error(
+          'The password reset approval could not be completed.'
+        );
+      }
+
       return;
     }
     case 'DELETE_USER': {
@@ -1203,6 +1308,71 @@ export async function submitDeleteUserRequest(input: { userId: number }) {
     afterState: null,
     changedFields: buildChangedFields(beforeState, null),
     changePatch: buildDeletePatch(
+      context.session.organizationId,
+      toNumber(existingUser.id)
+    ),
+  });
+}
+
+export async function submitResetUserPasswordRequest(input: {
+  userId: number;
+}) {
+  const context = await requirePermission('USER_WRITE');
+
+  requirePositiveInteger(input.userId, 'User');
+
+  const existingUser = await findExistingUserById(
+    context.session.organizationId,
+    input.userId
+  );
+
+  if (!existingUser) {
+    throw new Error('The requested user could not be found.');
+  }
+
+  if (existingUser.status !== 'ACTIVE') {
+    throw new Error('Only active users can receive a password reset request.');
+  }
+
+  if (!existingUser.email) {
+    throw new Error(
+      'The user must have an email address before a password reset can be requested.'
+    );
+  }
+
+  const resourceKey = buildUserResourceKey(
+    context.session.organizationCode,
+    existingUser.username
+  );
+
+  await ensureNoPendingLock(resourceKey);
+
+  const beforeState = buildSnapshot({
+    id: toNumber(existingUser.id),
+    username: existingUser.username,
+    displayName: existingUser.display_name,
+    email: existingUser.email,
+    userType: existingUser.user_type,
+    status: existingUser.status,
+  });
+
+  const changedFields: UserChangedFields = {
+    password_reset: {
+      before: null,
+      after: USER_PASSWORD_RESET_MESSAGE,
+    },
+  };
+
+  await createApprovalRequest({
+    organizationId: context.session.organizationId,
+    actorUserId: context.session.userId,
+    resourceKey,
+    actionType: 'UPDATE',
+    summary: `Reset password for user ${existingUser.username}`,
+    beforeState,
+    afterState: beforeState,
+    changedFields,
+    changePatch: buildResetPasswordPatch(
       context.session.organizationId,
       toNumber(existingUser.id)
     ),

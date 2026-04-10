@@ -169,6 +169,10 @@ App Router entry points, route files, and global styling.
   - Route-local client component for the delete confirmation modal.
   - Submits a delete maker request from the detail page.
 
+- `src/app/(workspace)/admin/users/[userId]/reset-user-password-request-button.tsx`
+  - Route-local client component for the password reset confirmation modal.
+  - Submits a maker request to reset a user's password from the detail page.
+
 - `src/app/(workspace)/admin/users/actions.ts`
   - Server actions for the Admin Users page.
   - Submits user change requests and processes approval decisions.
@@ -352,6 +356,10 @@ Shared non-visual utilities and application metadata.
   - Domain-specific email template and sender for approved user account provisioning.
   - Builds the welcome message content used when an approved user-create request generates a secure password.
 
+- `src/lib/user-password-reset-email.ts`
+  - Domain-specific email template and sender for approved user password reset delivery.
+  - Builds the reset message content used when an approved password-reset request generates a secure password.
+
 - `src/lib/navigation.ts`
   - Central source of truth for navigation groups and menu items.
   - Exposes route metadata and permission requirements used by the sidebar, home page, and dynamic item pages.
@@ -365,6 +373,7 @@ Shared non-visual utilities and application metadata.
   - Server-side user workflow module.
   - Supports user search, detail lookups, pending-request lookups, maker submissions, and checker decisions.
   - Approved user-create requests generate a secure password during approval and email it through the user account email wrapper.
+  - Approved password-reset requests generate a secure password during approval and email it through the password reset email wrapper.
 
 - `src/lib/organizations.ts`
   - Server-side organization workflow module.

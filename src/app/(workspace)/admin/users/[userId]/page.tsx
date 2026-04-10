@@ -11,6 +11,7 @@ import {
 } from '@/lib/users';
 
 import { DeleteUserRequestButton } from './delete-user-request-button';
+import { ResetUserPasswordRequestButton } from './reset-user-password-request-button';
 
 type UserDetailPageProps = {
   params: Promise<{
@@ -66,6 +67,11 @@ export default async function UserDetailPage({
     Boolean(pendingRequest) && (canManage || canApprove);
   const canEditOrDelete =
     !pendingRequest && user.status === 'ACTIVE' && canManage;
+  const canResetPassword =
+    !pendingRequest &&
+    user.status === 'ACTIVE' &&
+    canManage &&
+    Boolean(user.email);
   const detailPath = `/admin/users/${user.id}`;
 
   return (
@@ -112,6 +118,15 @@ export default async function UserDetailPage({
                   redirectTo={detailPath}
                 />
               </>
+            ) : null}
+
+            {canResetPassword ? (
+              <ResetUserPasswordRequestButton
+                userId={user.id}
+                displayName={user.displayName}
+                email={user.email!}
+                redirectTo={detailPath}
+              />
             ) : null}
           </div>
         </div>
@@ -198,7 +213,9 @@ export default async function UserDetailPage({
                 {pendingRequest
                   ? pendingRequest.actionType === 'CREATE'
                     ? 'Pending create approval'
-                    : pendingRequest.actionType === 'UPDATE'
+                    : pendingRequest.summary.startsWith('Reset password')
+                      ? 'Pending password reset approval'
+                      : pendingRequest.actionType === 'UPDATE'
                       ? 'Pending edit approval'
                       : 'Pending delete approval'
                   : 'No approval'}

@@ -8,6 +8,7 @@ import {
   rejectUserRequest,
   submitCreateUserRequest,
   submitDeleteUserRequest,
+  submitResetUserPasswordRequest,
   submitUpdateUserRequest,
 } from '@/lib/users';
 
@@ -152,6 +153,39 @@ export async function deleteUserRequestAction(formData: FormData) {
       redirectTarget,
       'notice',
       'User delete request submitted for review.'
+    );
+  }
+  redirect(redirectPath);
+}
+
+export async function resetUserPasswordRequestAction(formData: FormData) {
+  const redirectTarget = resolveRedirectTarget(formData);
+  let succeeded = false;
+  let redirectPath = buildRedirectPath(
+    'notice',
+    'User password reset request submitted for review.'
+  );
+
+  try {
+    await submitResetUserPasswordRequest({
+      userId: readPositiveInteger(formData, 'userId'),
+    });
+    succeeded = true;
+  } catch (error) {
+    redirectPath = buildRedirectPathForTarget(
+      redirectTarget,
+      'error',
+      getErrorMessage(error)
+    );
+  }
+
+  revalidatePath(USER_PAGE_PATH);
+  revalidatePath(redirectTarget);
+  if (succeeded && redirectTarget !== USER_PAGE_PATH) {
+    redirectPath = buildRedirectPathForTarget(
+      redirectTarget,
+      'notice',
+      'User password reset request submitted for review.'
     );
   }
   redirect(redirectPath);

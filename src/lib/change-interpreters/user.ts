@@ -20,6 +20,7 @@ const FIELD_LABELS: Record<string, string> = {
   email: 'Email',
   user_type: 'User Type',
   status: 'Status',
+  password_reset: 'Password Reset',
 };
 
 function displayValue(value: unknown): string | null {
