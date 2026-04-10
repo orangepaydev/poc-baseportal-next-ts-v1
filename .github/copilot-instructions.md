@@ -36,3 +36,5 @@ Documentation expectations:
 10. When generating Query, View, Edit, Create, or Delete pages for a database resource, read `doc/ui-page.md` for reference implementations, panel types, route conventions, and page patterns. Use the User Group pages as the canonical examples.
 
 If the task conflicts with the documentation, call out the mismatch and prefer the documented behavior until the project documentation is updated.
+
+Append prompts into the prompt-history.md file.  Each prompt should have a clear title and a description of the task.  If the prompt is related to a specific file, include the file path in the title.  If the prompt is related to a specific feature or component, include the feature or component name in the title.  Include the time the prompt was added.
