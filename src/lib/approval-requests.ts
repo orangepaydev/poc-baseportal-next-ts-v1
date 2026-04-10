@@ -6,6 +6,10 @@ import {
   applyApprovedOrganizationPatch,
   revertRejectedCreateOrganizationPatch,
 } from '@/lib/organizations';
+import {
+  applyApprovedUserPatch,
+  revertRejectedCreateUserPatch,
+} from '@/lib/users';
 import type { SystemCodeChangePatch } from '@/lib/system-codes';
 import type { SystemPropertyChangePatch } from '@/lib/system-properties';
 import type { UserGroupMembershipChangePatch } from '@/lib/user-group-memberships';
@@ -700,6 +704,11 @@ async function revertRejectedCreate(
     return;
   }
 
+  if (resourceType === 'USER') {
+    await revertRejectedCreateUserPatch(patch);
+    return;
+  }
+
   if (resourceType === 'USER_GROUP' && patch.op === 'CREATE_USER_GROUP') {
     const values = patch.values as {
       organization_id: number;
@@ -725,6 +734,8 @@ async function applyApprovedPatch(
   switch (resourceType) {
     case 'ORGANIZATION':
       return applyApprovedOrganizationPatch(patch);
+    case 'USER':
+      return applyApprovedUserPatch(patch);
     case 'SYSTEM_CODE':
       return applyApprovedSystemCodePatch(patch as SystemCodeChangePatch);
     case 'SYSTEM_PROPERTY':

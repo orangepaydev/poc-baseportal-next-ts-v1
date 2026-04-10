@@ -1492,14 +1492,28 @@ export async function rejectUserRequest(input: {
   const patch = parseChangePatch(request.change_patch);
 
   if (patch.op === 'CREATE_USER') {
-    await db.execute(
-      `
-        delete from users
-        where organization_id = ?
-          and username = ?
-          and status = 'DISABLED'
-      `,
-      [patch.values.organization_id, patch.values.username]
-    );
+    await revertRejectedCreateUserPatch(patch);
   }
+}
+
+export async function applyApprovedUserPatch(patch: unknown) {
+  await applyApprovedChange(parseChangePatch(patch));
+}
+
+export async function revertRejectedCreateUserPatch(patch: unknown) {
+  const parsedPatch = parseChangePatch(patch);
+
+  if (parsedPatch.op !== 'CREATE_USER') {
+    return;
+  }
+
+  await db.execute(
+    `
+      delete from users
+      where organization_id = ?
+        and username = ?
+        and status = 'DISABLED'
+    `,
+    [parsedPatch.values.organization_id, parsedPatch.values.username]
+  );
 }
