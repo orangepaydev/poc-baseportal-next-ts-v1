@@ -206,6 +206,16 @@ export default async function UserDetailPage({
                 {formatDate(user.updatedAt)}
               </td>
             </tr>
+            {user.passwordResetRequired ? (
+              <tr className="border-b border-slate-200">
+                <td className="py-3 pr-4 text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
+                  CHANGE PASSWORD ON LOGIN
+                </td>
+                <td className="py-3 pr-8 font-semibold text-slate-950">✓</td>
+                <td className="py-3 pr-4" />
+                <td className="py-3" />
+              </tr>
+            ) : null}
             <tr className="border-b border-slate-200">
               <td className="py-3 pr-4 text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
                 Approval Request

@@ -18,6 +18,7 @@ type UserListRow = {
   username: string;
   display_name: string;
   email: string | null;
+  password_reset_required: number;
   user_type: UserType;
   status: UserStatus;
   last_login_at: Date | string | null;
@@ -124,6 +125,7 @@ export type ManagedUser = {
   username: string;
   displayName: string;
   email: string | null;
+  passwordResetRequired: boolean;
   userType: UserType;
   status: UserStatus;
   lastLoginAt: string | null;
@@ -307,6 +309,7 @@ function mapManagedUser(row: UserListRow): ManagedUser {
     username: row.username,
     displayName: row.display_name,
     email: row.email,
+    passwordResetRequired: row.password_reset_required === 1,
     userType: row.user_type,
     status: row.status,
     lastLoginAt: row.last_login_at
