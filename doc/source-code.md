@@ -56,7 +56,7 @@ MariaDB bootstrap assets used by the Docker container on first startup.
   - Creates the local development database user `dbuser` with password `dbpass123` and grants full access to `portaldb`.
 
 - `docker-init/mariadb/init/002-portaldb-schema.sql`
-  - Creates the MariaDB schema for tenant-aware login, group permissions, approval workflow, and audit trail.
+  - Creates the MariaDB schema for tenant-aware login, reusable system-code lookup tables, group permissions, approval workflow, and audit trail.
   - Seeds baseline permission metadata for the current workspace navigation and admin resources.
 
 - `docker-init/mariadb/init/003-portaldb-records.sql`

@@ -16,6 +16,8 @@ The design separates live approved data from pending changes. Live tables contai
 - `organizations` stores approved tenant records.
 - `users` stores approved users for each organization.
 - `user_groups` stores approved groups within each organization.
+- `system_codes` stores lookup-code definitions.
+- `system_code_values` stores the allowed values for each lookup code.
 - `permissions` defines the permission catalog.
 - `user_group_permissions` assigns permissions to groups.
 - `user_group_memberships` assigns users to groups.
@@ -61,6 +63,24 @@ Approved user group records.
 - Belongs to one organization.
 - Users receive permissions only through group membership.
 - `group_code` is unique within an organization.
+
+### system_codes
+
+Lookup-code definitions.
+
+- `system_code` is the stable logical key for a lookup list.
+- `description` is limited to 200 characters.
+- `status` supports active and inactive lifecycle state for approval-driven maintenance.
+
+### system_code_values
+
+Allowed values for a lookup code.
+
+- Belongs to one `system_codes` row.
+- `system_code_value` is unique within a given system code.
+- `description` is limited to 200 characters.
+- `status` supports active and inactive lifecycle state for approval-driven maintenance.
+- `sort_order` supports stable presentation ordering within a code list.
 
 ### permission_actions
 

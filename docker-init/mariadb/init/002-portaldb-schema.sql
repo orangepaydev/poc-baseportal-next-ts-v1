@@ -47,6 +47,33 @@ CREATE TABLE user_groups (
     FOREIGN KEY (organization_id) REFERENCES organizations (id)
 );
 
+CREATE TABLE system_codes (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  system_code VARCHAR(100) NOT NULL,
+  description VARCHAR(200) NOT NULL,
+  status ENUM('ACTIVE', 'INACTIVE') NOT NULL DEFAULT 'ACTIVE',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_system_codes_code (system_code)
+);
+
+CREATE TABLE system_code_values (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  system_code_id BIGINT UNSIGNED NOT NULL,
+  system_code_value VARCHAR(100) NOT NULL,
+  description VARCHAR(200) NOT NULL,
+  status ENUM('ACTIVE', 'INACTIVE') NOT NULL DEFAULT 'ACTIVE',
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_system_code_values_pair (system_code_id, system_code_value),
+  KEY idx_system_code_values_code (system_code_id, sort_order),
+  CONSTRAINT fk_system_code_values_code
+    FOREIGN KEY (system_code_id) REFERENCES system_codes (id)
+);
+
 CREATE TABLE permission_actions (
   action_code VARCHAR(30) NOT NULL,
   action_name VARCHAR(100) NOT NULL,
