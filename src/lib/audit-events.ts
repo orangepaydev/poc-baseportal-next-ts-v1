@@ -46,6 +46,74 @@ function parseJsonColumn<T>(value: unknown): T | null {
   return value as T;
 }
 
+type ParsedLocalDateTime = {
+  date: Date;
+};
+
+const UTC_DATE_TIME_WITH_TIMEZONE_PATTERN =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/;
+
+function parseUtcDateTime(value: string): ParsedLocalDateTime | null {
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  if (!UTC_DATE_TIME_WITH_TIMEZONE_PATTERN.test(trimmedValue)) {
+    return null;
+  }
+
+  const date = new Date(trimmedValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return {
+    date,
+  };
+}
+
+function formatSqlDateTimePart(value: number) {
+  return String(value).padStart(2, '0');
+}
+
+function formatUtcSqlDateTime(date: Date) {
+  return `${date.getUTCFullYear()}-${formatSqlDateTimePart(
+    date.getUTCMonth() + 1
+  )}-${formatSqlDateTimePart(date.getUTCDate())} ${formatSqlDateTimePart(
+    date.getUTCHours()
+  )}:${formatSqlDateTimePart(date.getUTCMinutes())}:${formatSqlDateTimePart(
+    date.getUTCSeconds()
+  )}`;
+}
+
+function getOccurredAtRangeFilters(input: {
+  occurredAtStartFilter?: string;
+  occurredAtEndFilter?: string;
+}) {
+  const startDateTime = parseUtcDateTime(input.occurredAtStartFilter ?? '');
+  const endDateTime = parseUtcDateTime(input.occurredAtEndFilter ?? '');
+
+  const occurredAtStart = startDateTime
+    ? formatUtcSqlDateTime(startDateTime.date)
+    : '';
+
+  let occurredAtEndExclusive = '';
+
+  if (endDateTime) {
+    const endDate = new Date(endDateTime.date.getTime());
+    endDate.setUTCSeconds(endDate.getUTCSeconds() + 1);
+    occurredAtEndExclusive = formatUtcSqlDateTime(endDate);
+  }
+
+  return {
+    occurredAtStart,
+    occurredAtEndExclusive,
+  };
+}
+
 export type AuditEventListItem = {
   id: number;
   eventType: string;
@@ -112,11 +180,15 @@ export async function searchAuditEventsPage(input: {
   organizationId: number;
   eventTypeFilter?: string;
   resourceTypeFilter?: string;
+  occurredAtStartFilter?: string;
+  occurredAtEndFilter?: string;
   page?: number;
   pageSize?: number;
 }): Promise<PaginatedAuditEventResult> {
   const eventTypeFilter = (input.eventTypeFilter ?? '').trim();
   const resourceTypeFilter = (input.resourceTypeFilter ?? '').trim();
+  const { occurredAtStart, occurredAtEndExclusive } =
+    getOccurredAtRangeFilters(input);
   const pageSize = Math.max(1, Math.min(input.pageSize ?? 10, 100));
   const page = Math.max(1, input.page ?? 1);
   const offset = (page - 1) * pageSize;
@@ -129,6 +201,8 @@ export async function searchAuditEventsPage(input: {
       where ae.organization_id = ?
         and (? = '' or ae.event_type = ?)
         and (? = '' or ae.resource_type = ?)
+        and (? = '' or ae.occurred_at >= ?)
+        and (? = '' or ae.occurred_at < ?)
     `,
     [
       input.organizationId,
@@ -136,6 +210,10 @@ export async function searchAuditEventsPage(input: {
       eventTypeFilter,
       resourceTypeFilter,
       resourceTypeFilter,
+      occurredAtStart,
+      occurredAtStart,
+      occurredAtEndExclusive,
+      occurredAtEndExclusive,
     ]
   );
 
@@ -147,13 +225,15 @@ export async function searchAuditEventsPage(input: {
         ae.resource_type,
         ae.resource_key,
         actor.display_name as actor_display_name,
-        ae.occurred_at
+        CONCAT(DATE_FORMAT(ae.occurred_at, '%Y-%m-%dT%T.000'), 'Z') AS occurred_at
       from audit_events ae
       left join users actor
         on actor.id = ae.actor_user_id
       where ae.organization_id = ?
         and (? = '' or ae.event_type = ?)
         and (? = '' or ae.resource_type = ?)
+        and (? = '' or ae.occurred_at >= ?)
+        and (? = '' or ae.occurred_at < ?)
       order by ae.occurred_at desc, ae.id desc
       limit ? offset ?
     `,
@@ -163,6 +243,10 @@ export async function searchAuditEventsPage(input: {
       eventTypeFilter,
       resourceTypeFilter,
       resourceTypeFilter,
+      occurredAtStart,
+      occurredAtStart,
+      occurredAtEndExclusive,
+      occurredAtEndExclusive,
       pageSize,
       offset,
     ]
@@ -196,7 +280,7 @@ export async function getAuditEventById(
         ae.event_data,
         ae.ip_address,
         ae.user_agent,
-        ae.occurred_at
+        CONCAT(DATE_FORMAT(ae.occurred_at, '%Y-%m-%dT%T.000'), 'Z') AS occurred_at
       from audit_events ae
       left join organizations org
         on org.id = ae.organization_id

@@ -6,20 +6,13 @@ import { Button } from '@/components/ui/button';
 import { requireNavigationItemAccess } from '@/lib/auth/authorization';
 import { getAuditEventById } from '@/lib/audit-events';
 
+import { LocalDateTimeText } from '../local-datetime-text';
+
 type AuditLogDetailPageProps = {
   params: Promise<{
     eventId: string;
   }>;
 };
-
-const dateTimeFormatter = new Intl.DateTimeFormat('en-SG', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-});
-
-function formatDate(value: string) {
-  return dateTimeFormatter.format(new Date(value));
-}
 
 export default async function AuditLogDetailPage({
   params,
@@ -37,6 +30,8 @@ export default async function AuditLogDetailPage({
   if (!event) {
     notFound();
   }
+
+  console.log('event detail:', event);
 
   return (
     <div className="grid gap-4">
@@ -124,7 +119,7 @@ export default async function AuditLogDetailPage({
                 Occurred At
               </td>
               <td className="py-3 pr-8 font-semibold text-slate-950">
-                {formatDate(event.occurredAt)}
+                <LocalDateTimeText value={event.occurredAt} />
               </td>
               <td className="py-3 pr-4 text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
                 Approval Request

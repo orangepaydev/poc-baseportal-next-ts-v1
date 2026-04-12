@@ -23,6 +23,10 @@ export type SortableQueryTableCell =
       kind: 'text';
     })
   | (SortableQueryTableCellBase & {
+      kind: 'datetime';
+      value: string;
+    })
+  | (SortableQueryTableCellBase & {
       kind: 'link';
       href: string;
     })
@@ -52,6 +56,11 @@ type SortableQueryTableProps = {
 const collator = new Intl.Collator('en', {
   numeric: true,
   sensitivity: 'base',
+});
+
+const browserDateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  dateStyle: 'medium',
+  timeStyle: 'short',
 });
 
 const alignmentClassNames: Record<CellAlign, string> = {
@@ -89,6 +98,16 @@ function getAlignmentClassName(
   return alignmentClassNames[cellAlign ?? columnAlign ?? 'left'];
 }
 
+function formatBrowserDateTime(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return browserDateTimeFormatter.format(date);
+}
+
 function renderCell(cell: SortableQueryTableCell, columnAlign?: CellAlign) {
   const alignmentClassName = getAlignmentClassName(cell.align, columnAlign);
 
@@ -116,6 +135,19 @@ function renderCell(cell: SortableQueryTableCell, columnAlign?: CellAlign) {
         >
           {cell.primary}
         </div>
+        {cell.secondary ? (
+          <p className="mt-1 text-sm text-slate-500">{cell.secondary}</p>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (cell.kind === 'datetime') {
+    return (
+      <div className={alignmentClassName}>
+        <p className="text-sm text-slate-700">
+          {formatBrowserDateTime(cell.value)}
+        </p>
         {cell.secondary ? (
           <p className="mt-1 text-sm text-slate-500">{cell.secondary}</p>
         ) : null}

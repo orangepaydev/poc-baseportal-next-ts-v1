@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { Search } from 'lucide-react';
 
 import {
   SortableQueryTable,
@@ -10,10 +9,14 @@ import { Button } from '@/components/ui/button';
 import { requireNavigationItemAccess } from '@/lib/auth/authorization';
 import { searchAuditEventsPage } from '@/lib/audit-events';
 
+import { AuditLogSearchForm } from './audit-log-search-form';
+
 type AuditLogPageProps = {
   searchParams: Promise<{
     eventType?: string;
     resourceType?: string;
+    occurredAtStart?: string;
+    occurredAtEnd?: string;
     page?: string;
     notice?: string;
     error?: string;
@@ -33,6 +36,8 @@ const AUDIT_LOG_TABLE_COLUMNS: readonly SortableQueryTableColumn[] = [
 function buildPageHref(
   eventTypeFilter: string,
   resourceTypeFilter: string,
+  occurredAtStartFilter: string,
+  occurredAtEndFilter: string,
   page: number
 ) {
   const params = new URLSearchParams();
@@ -45,6 +50,14 @@ function buildPageHref(
     params.set('resourceType', resourceTypeFilter);
   }
 
+  if (occurredAtStartFilter) {
+    params.set('occurredAtStart', occurredAtStartFilter);
+  }
+
+  if (occurredAtEndFilter) {
+    params.set('occurredAtEnd', occurredAtEndFilter);
+  }
+
   if (page > 1) {
     params.set('page', String(page));
   }
@@ -54,21 +67,14 @@ function buildPageHref(
   return query ? `/admin/audit-log?${query}` : '/admin/audit-log';
 }
 
-const dateTimeFormatter = new Intl.DateTimeFormat('en-SG', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-});
-
-function formatDate(value: string) {
-  return dateTimeFormatter.format(new Date(value));
-}
-
 export default async function AuditLogPage({
   searchParams,
 }: AuditLogPageProps) {
   const params = await searchParams;
   const eventTypeFilter = (params.eventType ?? '').trim();
   const resourceTypeFilter = (params.resourceType ?? '').trim();
+  const occurredAtStartFilter = (params.occurredAtStart ?? '').trim();
+  const occurredAtEndFilter = (params.occurredAtEnd ?? '').trim();
   const currentPage = Math.max(
     1,
     Number.parseInt(params.page ?? '1', 10) || 1
@@ -83,6 +89,8 @@ export default async function AuditLogPage({
     organizationId: session.organizationId,
     eventTypeFilter,
     resourceTypeFilter,
+    occurredAtStartFilter,
+    occurredAtEndFilter,
     page: currentPage,
     pageSize: PAGE_SIZE,
   });
@@ -115,8 +123,9 @@ export default async function AuditLogPage({
         sortValue: event.actorDisplayName ?? '',
       },
       occurredAt: {
-        kind: 'text',
-        primary: formatDate(event.occurredAt),
+        kind: 'datetime',
+        value: event.occurredAt,
+        primary: event.occurredAt,
         sortValue: new Date(event.occurredAt).getTime(),
       },
     },
@@ -133,42 +142,13 @@ export default async function AuditLogPage({
           </div>
         </div>
 
-        <form
+        <AuditLogSearchForm
           action="/admin/audit-log"
-          className="mt-6 grid gap-4 lg:grid-cols-[1fr_1fr_auto]"
-        >
-          <label className="space-y-2 text-sm font-medium text-slate-700">
-            <span>Event Type</span>
-            <input
-              name="eventType"
-              type="text"
-              defaultValue={eventTypeFilter}
-              placeholder="e.g. AUTH_LOGIN_SUCCEEDED"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-normal text-slate-900 transition outline-none focus:border-cyan-500 focus:bg-white"
-            />
-          </label>
-
-          <label className="space-y-2 text-sm font-medium text-slate-700">
-            <span>Resource Type</span>
-            <input
-              name="resourceType"
-              type="text"
-              defaultValue={resourceTypeFilter}
-              placeholder="e.g. USER"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-normal text-slate-900 transition outline-none focus:border-cyan-500 focus:bg-white"
-            />
-          </label>
-
-          <div className="flex items-end">
-            <Button
-              type="submit"
-              className="w-full rounded-2xl bg-slate-950 text-white hover:bg-slate-800 lg:w-auto"
-            >
-              <Search className="size-4" />
-              Search
-            </Button>
-          </div>
-        </form>
+          eventTypeFilter={eventTypeFilter}
+          resourceTypeFilter={resourceTypeFilter}
+          occurredAtStartFilter={occurredAtStartFilter}
+          occurredAtEndFilter={occurredAtEndFilter}
+        />
 
         {params.notice ? (
           <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
@@ -205,6 +185,8 @@ export default async function AuditLogPage({
                 href={buildPageHref(
                   eventTypeFilter,
                   resourceTypeFilter,
+                  occurredAtStartFilter,
+                  occurredAtEndFilter,
                   page - 1
                 )}
               >
@@ -223,6 +205,8 @@ export default async function AuditLogPage({
                 href={buildPageHref(
                   eventTypeFilter,
                   resourceTypeFilter,
+                  occurredAtStartFilter,
+                  occurredAtEndFilter,
                   page + 1
                 )}
               >
