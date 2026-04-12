@@ -379,7 +379,7 @@ async function findSystemCodeById(systemCodeId: number) {
         sc.description,
         sc.status,
         count(distinct scv.id) as value_count,
-        sc.updated_at
+        CONCAT(DATE_FORMAT(sc.updated_at, '%Y-%m-%dT%T.000'), 'Z') AS updated_at
       from system_codes sc
       left join system_code_values scv
         on scv.system_code_id = sc.id
@@ -619,7 +619,7 @@ export async function searchApprovedSystemCodesPage(input: {
         sc.description,
         sc.status,
         count(distinct scv.id) as value_count,
-        sc.updated_at
+        CONCAT(DATE_FORMAT(sc.updated_at, '%Y-%m-%dT%T.000'), 'Z') AS updated_at
       from system_codes sc
       left join system_code_values scv
         on scv.system_code_id = sc.id

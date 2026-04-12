@@ -401,8 +401,8 @@ async function findExistingUserById(organizationId: number, userId: number) {
         u.password_reset_required,
         u.user_type,
         u.status,
-        u.last_login_at,
-        u.updated_at
+        CONCAT(DATE_FORMAT(u.last_login_at, '%Y-%m-%dT%T.000'), 'Z') AS last_login_at,
+        CONCAT(DATE_FORMAT(u.updated_at, '%Y-%m-%dT%T.000'), 'Z') AS updated_at
       from users u
       where u.organization_id = ?
         and u.id = ?

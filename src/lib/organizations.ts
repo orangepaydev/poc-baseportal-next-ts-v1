@@ -401,7 +401,7 @@ async function findExistingOrganizationById(organizationId: number) {
         o.organization_name,
         o.status,
         count(distinct u.id) as user_count,
-        o.updated_at
+        CONCAT(DATE_FORMAT(u.updated_at, '%Y-%m-%dT%T.000'), 'Z') AS updated_at
       from organizations o
       left join users u
         on u.organization_id = o.id
@@ -983,7 +983,7 @@ export async function searchOrganizationsPage(input: {
         o.organization_name,
         o.status,
         count(distinct u.id) as user_count,
-        o.updated_at
+        CONCAT(DATE_FORMAT(u.updated_at, '%Y-%m-%dT%T.000'), 'Z') AS updated_at
       from organizations o
       left join users u
         on u.organization_id = o.id

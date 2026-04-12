@@ -226,7 +226,7 @@ async function findExistingGroupById(organizationId: number, groupId: number) {
         user_group.status,
         count(distinct membership.user_id) as member_count,
         count(distinct group_permission.permission_id) as permission_count,
-        user_group.updated_at
+        CONCAT(DATE_FORMAT(user_group.updated_at, '%Y-%m-%dT%T.000'), 'Z') AS updated_at
       from user_groups user_group
       left join user_group_memberships membership
         on membership.user_group_id = user_group.id
@@ -558,7 +558,7 @@ export async function searchApprovedUserGroupPermissionTargetsPage(input: {
         user_group.status,
         count(distinct membership.user_id) as member_count,
         count(distinct group_permission.permission_id) as permission_count,
-        user_group.updated_at
+        CONCAT(DATE_FORMAT(user_group.updated_at, '%Y-%m-%dT%T.000'), 'Z') AS updated_at
       from user_groups user_group
       left join user_group_memberships membership
         on membership.user_group_id = user_group.id

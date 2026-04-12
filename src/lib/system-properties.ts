@@ -372,7 +372,7 @@ async function findSystemPropertyById(systemPropertyId: number) {
         sp.property_code,
         sp.description,
         count(distinct spc.id) as value_count,
-        sp.updated_at
+        CONCAT(DATE_FORMAT(sp.updated_at, '%Y-%m-%dT%T.000'), 'Z') AS updated_at
       from system_properties sp
       left join system_property_codes spc
         on spc.system_property_id = sp.id
@@ -408,7 +408,7 @@ async function findSystemPropertyValues(systemPropertyId: number) {
         spc.property_item_code,
         spc.property_value,
         spc.description,
-        spc.updated_at
+        CONCAT(DATE_FORMAT(spc.updated_at, '%Y-%m-%dT%T.000'), 'Z') AS updated_at
       from system_property_codes spc
       where spc.system_property_id = ?
       order by spc.property_item_code asc, spc.id desc
@@ -429,7 +429,7 @@ async function findSystemPropertyValueById(
         spc.property_item_code,
         spc.property_value,
         spc.description,
-        spc.updated_at
+        CONCAT(DATE_FORMAT(spc.updated_at, '%Y-%m-%dT%T.000'), 'Z') AS updated_at
       from system_property_codes spc
       where spc.system_property_id = ?
         and spc.id = ?
@@ -612,7 +612,7 @@ export async function searchApprovedSystemPropertiesPage(input: {
         sp.property_code,
         sp.description,
         count(distinct spc.id) as value_count,
-        sp.updated_at
+        CONCAT(DATE_FORMAT(sp.updated_at, '%Y-%m-%dT%T.000'), 'Z') AS updated_at
       from system_properties sp
       left join system_property_codes spc
         on spc.system_property_id = sp.id

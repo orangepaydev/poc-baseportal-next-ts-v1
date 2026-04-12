@@ -176,9 +176,9 @@ export async function searchApprovalRequestsPage(input: {
         ar.status,
         ar.summary,
         submitter.display_name as submitted_by_display_name,
-        ar.submitted_at,
+        CONCAT(DATE_FORMAT(ar.submitted_at, '%Y-%m-%dT%T.000'), 'Z') AS submitted_at,
         reviewer.display_name as reviewed_by_display_name,
-        ar.reviewed_at
+        CONCAT(DATE_FORMAT(ar.reviewed_at, '%Y-%m-%dT%T.000'), 'Z') AS reviewed_at
       from approval_requests ar
       left join users submitter
         on submitter.id = ar.submitted_by_user_id
@@ -229,10 +229,10 @@ export async function getApprovalRequestById(
         ar.review_comment,
         ar.submitted_by_user_id,
         submitter.display_name as submitted_by_display_name,
-        ar.submitted_at,
+        CONCAT(DATE_FORMAT(ar.submitted_at, '%Y-%m-%dT%T.000'), 'Z') AS submitted_at,
         ar.reviewed_by_user_id,
         reviewer.display_name as reviewed_by_display_name,
-        ar.reviewed_at
+        CONCAT(DATE_FORMAT(ar.reviewed_at, '%Y-%m-%dT%T.000'), 'Z') AS reviewed_at
       from approval_requests ar
       left join users submitter
         on submitter.id = ar.submitted_by_user_id
