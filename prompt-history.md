@@ -21,3 +21,7 @@
 ## 2026-04-11 07:22:12 +08 - Audit Log Detail Browser Local Time
 
 - Task: Apply the same browser-local timestamp rendering used by the Audit Log search page to the Audit Log detail page.
+
+## 2026-04-12 17:09:42 +08 - src/lib/dynamodb/index.ts Default DynamoDB Region
+
+- Task: Update `src/lib/dynamodb/index.ts` so the DynamoDB helper constructor defaults the AWS region to Singapore when no region value is provided.
