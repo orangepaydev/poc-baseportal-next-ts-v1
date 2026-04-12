@@ -143,3 +143,13 @@ Every generated page should follow these conventions from the User Group referen
 7. **Conditional UI** — show or hide action buttons based on the user's permission codes and the resource state.
 8. **Stable list ordering** — keep the server-side query order deterministic by including the resource `id desc` as the default fallback sort key.
 9. **Loaded-row sorting** — query result tables may allow client-side column sorting, but only against the rows already loaded for the current page.
+
+## SQL Formatting Rules
+
+When generating SQL for View or Detail pages, use the following format for datetime columns:
+
+```sql
+CONCAT(DATE_FORMAT({col}, '%Y-%m-%dT%T.000'), 'Z') AS {col}
+```
+
+This ensures ISO 8611 compliance for JSON serialization in the UI.
