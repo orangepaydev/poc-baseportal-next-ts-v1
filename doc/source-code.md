@@ -14,6 +14,10 @@ This document describes where the application source code lives and what each cu
 
 ## Documentation Set
 
+- `doc/index.md`
+  - Entry point for documentation lookup.
+  - Maps task types to the relevant documentation files so agents can read only the documents needed for the current task.
+
 - `doc/ui-page.md`
   - Reference guide for generating CRUD UI pages from the User Group examples.
   - States that Query and View data access should include the authenticated session `organizationId` by default unless the user explicitly asks for cross-organization behavior.

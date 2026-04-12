@@ -25,3 +25,7 @@
 ## 2026-04-12 17:09:42 +08 - src/lib/dynamodb/index.ts Default DynamoDB Region
 
 - Task: Update `src/lib/dynamodb/index.ts` so the DynamoDB helper constructor defaults the AWS region to Singapore when no region value is provided.
+
+## 2026-04-12 17:12:23 +08 - Documentation Index For Targeted Doc Reads
+
+- Task: Add a documentation index and update workspace instructions so future prompts can read only the relevant files in `doc` instead of always reading every Markdown file.
